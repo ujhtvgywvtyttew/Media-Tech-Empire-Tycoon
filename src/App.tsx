@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, Users, Cpu, Palette, Bug, Star, Trophy, Plus, Gamepad2, X, Code, 
   Megaphone, UserPlus, TrendingUp, MonitorPlay, Smartphone, Laptop, Store, 
   Building2, Landmark, Briefcase, Share2, Award, Presentation, Search, 
   ShoppingCart, GraduationCap, MousePointer2, LayoutGrid, BarChart3, PieChart, 
   Calendar, FileText, Globe, Settings, Building, Monitor, Target, Rocket, Clock, TrendingDown, AlertTriangle, Mic,
-  Book, Radio, Puzzle, Package, Joystick, Newspaper, Glasses
+  Book, Radio, Puzzle, Package, Joystick, Newspaper, Glasses, ChevronLeft, Dices
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -67,9 +67,12 @@ export default function App() {
   const [perks, setPerks] = useState<string[]>([]);
   const [ceoName, setCeoName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [companyFocus, setCompanyFocus] = useState('Geral');
+  const [logoColor, setLogoColor] = useState('#6366f1');
   const [country, setCountry] = useState('');
   const [stateName, setStateName] = useState('');
   const [city, setCity] = useState('');
+  const [bands, setBands] = useState<{id: number, name: string, genre: string, members: number}[]>([]);
 
   const countries = [
     { 
@@ -229,7 +232,14 @@ export default function App() {
 
   // Modals
   const [isProductSelectOpen, setIsProductSelectOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [isBandSetupOpen, setIsBandSetupOpen] = useState(false);
+  const [selectedBandId, setSelectedBandId] = useState<number | null>(null);
+  const [newBandName, setNewBandName] = useState('');
+  const [newBandGenre, setNewBandGenre] = useState('Rock');
+  const [newBandMembers, setNewBandMembers] = useState(1);
+
   const [isDevOpen, setIsDevOpen] = useState(false);
   const [isDeveloping, setIsDeveloping] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -262,6 +272,76 @@ export default function App() {
 
   // Review State
   const [lastGame, setLastGame] = useState<Game | null>(null);
+
+  // Save / Load System
+  const stateRef = useRef({
+    gameState, gameMode, startYear, creationStep, playerStats, perks, ceoName, companyName, companyFocus, logoColor, country, stateName, city, bands,
+    money, fans, history, awardsWon, news, officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
+    loans, bankOwned, stocks, socialAccounts, companies, gameDate: gameDate.getTime(), staff
+  });
+
+  useEffect(() => {
+    stateRef.current = {
+      gameState, gameMode, startYear, creationStep, playerStats, perks, ceoName, companyName, companyFocus, logoColor, country, stateName, city, bands,
+      money, fans, history, awardsWon, news, officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
+      loans, bankOwned, stocks, socialAccounts, companies, gameDate: gameDate.getTime(), staff
+    };
+  }, [gameState, gameMode, startYear, creationStep, playerStats, perks, ceoName, companyName, companyFocus, logoColor, country, stateName, city, bands,
+      money, fans, history, awardsWon, news, officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
+      loans, bankOwned, stocks, socialAccounts, companies, gameDate, staff]);
+
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      if (stateRef.current.gameState === 'playing') {
+        localStorage.setItem('tycoon_save', JSON.stringify(stateRef.current));
+      }
+    }, 5000);
+    return () => clearInterval(saveInterval);
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('tycoon_save');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setGameState(parsed.gameState);
+        setGameMode(parsed.gameMode);
+        setStartYear(parsed.startYear);
+        setCreationStep(parsed.creationStep);
+        setPlayerStats(parsed.playerStats);
+        setPerks(parsed.perks);
+        setCeoName(parsed.ceoName);
+        setCompanyName(parsed.companyName);
+        if (parsed.companyFocus) setCompanyFocus(parsed.companyFocus);
+        if (parsed.logoColor) setLogoColor(parsed.logoColor);
+        setCountry(parsed.country);
+        setStateName(parsed.stateName);
+        setCity(parsed.city);
+        if (parsed.bands) setBands(parsed.bands);
+        setMoney(parsed.money);
+        setFans(parsed.fans);
+        setHistory(parsed.history);
+        setAwardsWon(parsed.awardsWon);
+        setNews(parsed.news);
+        setOfficeLevel(parsed.officeLevel);
+        setStores(parsed.stores);
+        setResearchLabs(parsed.researchLabs);
+        setFactories(parsed.factories);
+        setResearchPoints(parsed.researchPoints);
+        setTechLevel(parsed.techLevel);
+        setUpgrades(parsed.upgrades);
+        setLoans(parsed.loans);
+        setBankOwned(parsed.bankOwned);
+        setStocks(parsed.stocks);
+        setSocialAccounts(parsed.socialAccounts);
+        setCompanies(parsed.companies);
+        setGameDate(new Date(parsed.gameDate));
+        setStaff(parsed.staff);
+      } catch (e) {
+        console.error("Failed to load save", e);
+      }
+    }
+  }, []);
 
   // Development Loop
   useEffect(() => {
@@ -425,9 +505,50 @@ export default function App() {
     return () => clearInterval(timer);
   }, [bankOwned, stores, companies, socialAccounts.length, staff.researchers, researchLabs]);
 
+  const generateRandomName = (type: string) => {
+    const prefixes = ['Super', 'Mega', 'Ultra', 'Cyber', 'Neo', 'Quantum', 'Aero', 'Chrono', 'Star', 'Space', 'Dark', 'Light', 'Magic', 'Mystic', 'Epic', 'Legendary', 'Infinite', 'Virtual', 'Real', 'Pro', 'Max', 'Elite', 'Prime', 'Alpha', 'Omega'];
+    const suffixes = ['Quest', 'Adventure', 'Wars', 'Strike', 'Force', 'City', 'World', 'Universe', 'Galaxy', 'Empire', 'Kingdom', 'Legends', 'Heroes', 'Champions', 'Fighters', 'Racers', 'Sim', 'Tycoon', 'Manager', 'Builder', 'Creator', 'Maker', 'Studio', 'Lab', 'Station'];
+    
+    let name = '';
+    
+    if (['Jogo', 'Jogo Online', 'Arcade', 'Jogo de Tabuleiro'].includes(type)) {
+      name = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+    } else if (['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Óculos VR'].includes(type)) {
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+      const randomNumber = Math.floor(Math.random() * 1000);
+      name = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${randomLetter}-${randomNumber}`;
+    } else if (['Filme', 'Série', 'Programa de TV', 'Livro', 'Revista', 'Jornal'].includes(type)) {
+      const themes = ['Amor', 'Vingança', 'Mistério', 'Segredo', 'Destino', 'Jornada', 'Batalha', 'Guerra', 'Paz', 'Esperança', 'Sombras', 'Luz', 'Tempo', 'Espaço', 'Mente', 'Coração', 'Alma', 'Sangue', 'Fogo', 'Gelo'];
+      const articles = ['O', 'A', 'Os', 'As', 'Um', 'Uma'];
+      name = `${articles[Math.floor(Math.random() * articles.length)]} ${themes[Math.floor(Math.random() * themes.length)]} de ${prefixes[Math.floor(Math.random() * prefixes.length)]}`;
+    } else if (['Álbum Musical', 'Podcast', 'Programa de Rádio'].includes(type)) {
+      const vibes = ['Vibes', 'Sons', 'Batidas', 'Ritmos', 'Melodias', 'Harmonias', 'Vozes', 'Ecos', 'Sussurros', 'Gritos', 'Silêncio', 'Ruído', 'Frequência', 'Onda', 'Pulso'];
+      name = `${vibes[Math.floor(Math.random() * vibes.length)]} ${prefixes[Math.floor(Math.random() * prefixes.length)]}`;
+    } else if (['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio'].includes(type)) {
+      const locations = ['Park', 'Plaza', 'Tower', 'Center', 'Square', 'Avenue', 'Boulevard', 'Heights', 'View', 'Valley', 'Hill', 'Ridge', 'Point', 'Bay', 'Cove', 'Harbor', 'Port', 'Isle', 'Island', 'Beach', 'Coast', 'Shore', 'Bank', 'River', 'Lake'];
+      name = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${locations[Math.floor(Math.random() * locations.length)]}`;
+    } else {
+      name = `Projeto ${prefixes[Math.floor(Math.random() * prefixes.length)]}`;
+    }
+    
+    setGameName(name);
+  };
+
   const openSetup = (type: string) => {
     setGameName('');
     setProductType(type);
+    
+    if (type === 'Álbum Musical') {
+      setGenre('Pop');
+    } else if (type === 'Podcast' || type === 'Programa de Rádio') {
+      setGenre('Entrevistas');
+    } else if (type === 'Livro' || type === 'Revista' || type === 'Jornal') {
+      setGenre('Ficção');
+    } else {
+      setGenre('Ação');
+    }
+    
     setFocusEngine(50);
     setFocusGameplay(50);
     setFocusStory(50);
@@ -435,7 +556,12 @@ export default function App() {
     setFocusAudio(50);
     setFocusPolishing(50);
     setIsProductSelectOpen(false);
-    setIsSetupOpen(true);
+    
+    if (type === 'Álbum Musical') {
+      setIsBandSetupOpen(true);
+    } else {
+      setIsSetupOpen(true);
+    }
   };
 
   const getAvailableProductTypes = (year: number) => {
@@ -478,6 +604,10 @@ export default function App() {
       if (year >= 2015) types.push('Smartwatch', 'Óculos VR');
     }
 
+    // Construções
+    if (year >= 1970) types.push('Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica');
+    if (year >= 1980) types.push('Shopping Center', 'Estádio');
+
     return types;
   };
 
@@ -508,6 +638,12 @@ export default function App() {
     else if (productType === 'Jogo de Tabuleiro') typeCostMultiplier = 2;
     else if (productType === 'Brinquedo') typeCostMultiplier = 3;
     else if (productType === 'Arcade') typeCostMultiplier = 8;
+    else if (productType === 'Casa') typeCostMultiplier = 15;
+    else if (productType === 'Prédio Residencial') typeCostMultiplier = 50;
+    else if (productType === 'Prédio Comercial') typeCostMultiplier = 60;
+    else if (productType === 'Fábrica') typeCostMultiplier = 80;
+    else if (productType === 'Shopping Center') typeCostMultiplier = 150;
+    else if (productType === 'Estádio') typeCostMultiplier = 200;
     
     const sizeCostMultiplier = gameSize === 'AAA' ? 10 : gameSize === 'Médio' ? 3 : 1;
     return (10000 + (staff.devs * 2000) + (staff.designers * 2000) + (staff.testers * 1500)) * sizeCostMultiplier * typeCostMultiplier;
@@ -518,6 +654,7 @@ export default function App() {
     const isMedia = ['Filme', 'Série', 'Programa de TV'].includes(type);
     const isAudio = ['Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio'].includes(type);
     const isPrint = ['Livro', 'Jornal', 'Revista', 'Jogo de Tabuleiro', 'Brinquedo'].includes(type);
+    const isBuilding = ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica', 'Shopping Center', 'Estádio'].includes(type);
     
     if (isHardware) {
       return [
@@ -555,6 +692,15 @@ export default function App() {
         { state: focusAudio, set: setFocusAudio, label: 'Qualidade dos Componentes', icon: <Star className="w-4 h-4"/>, color: 'text-rose-400', accent: 'accent-rose-500' },
         { state: focusPolishing, set: setFocusPolishing, label: 'Revisão / Testes', icon: <Bug className="w-4 h-4"/>, color: 'text-cyan-400', accent: 'accent-cyan-500' },
       ];
+    } else if (isBuilding) {
+      return [
+        { state: focusEngine, set: setFocusEngine, label: 'Fundação / Estrutura', icon: <Building2 className="w-4 h-4"/>, color: 'text-blue-400', accent: 'accent-blue-500' },
+        { state: focusGameplay, set: setFocusGameplay, label: 'Planta / Espaço', icon: <LayoutGrid className="w-4 h-4"/>, color: 'text-purple-400', accent: 'accent-purple-500' },
+        { state: focusStory, set: setFocusStory, label: 'Arquitetura / Design', icon: <Palette className="w-4 h-4"/>, color: 'text-amber-400', accent: 'accent-amber-500' },
+        { state: focusGraphics, set: setFocusGraphics, label: 'Acabamento / Materiais', icon: <Star className="w-4 h-4"/>, color: 'text-emerald-400', accent: 'accent-emerald-500' },
+        { state: focusAudio, set: setFocusAudio, label: 'Elétrica / Hidráulica', icon: <Cpu className="w-4 h-4"/>, color: 'text-rose-400', accent: 'accent-rose-500' },
+        { state: focusPolishing, set: setFocusPolishing, label: 'Inspeção / Segurança', icon: <Bug className="w-4 h-4"/>, color: 'text-cyan-400', accent: 'accent-cyan-500' },
+      ];
     } else {
       // Software / Jogos
       return [
@@ -591,6 +737,46 @@ export default function App() {
     setDevBugs(0);
     setIsDeveloping(true);
     setIsDevOpen(true);
+  };
+
+  const startBandProject = () => {
+    if (selectedBandId === null && !newBandName.trim()) {
+      setNotification({ message: 'Por favor, selecione uma banda ou crie uma nova!', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
+    let bandId = selectedBandId;
+    let currentBandName = '';
+
+    if (selectedBandId === null) {
+      const newBand = {
+        id: Date.now(),
+        name: newBandName,
+        genre: newBandGenre,
+        members: newBandMembers
+      };
+      setBands([...bands, newBand]);
+      bandId = newBand.id;
+      currentBandName = newBand.name;
+    } else {
+      const band = bands.find(b => b.id === selectedBandId);
+      if (band) {
+        currentBandName = band.name;
+      }
+    }
+
+    // Set default values for album
+    setGameName(`Álbum de ${currentBandName}`);
+    setGenre(selectedBandId === null ? newBandGenre : bands.find(b => b.id === selectedBandId)?.genre || 'Pop');
+    setPlatform('Streaming');
+    setSecondPlatform('Físico (CD/Vinil)');
+    setGameSize('Médio');
+    setTargetAudience('Todos');
+    setMonetization('Venda Direta');
+
+    setIsBandSetupOpen(false);
+    setIsSetupOpen(true);
   };
 
   const testProduct = () => {
@@ -658,6 +844,12 @@ export default function App() {
     else if (productType === 'Jogo de Tabuleiro') typeDifficultyMultiplier = 1.5;
     else if (productType === 'Brinquedo') typeDifficultyMultiplier = 2.0;
     else if (productType === 'Arcade') typeDifficultyMultiplier = 3.5;
+    else if (productType === 'Casa') typeDifficultyMultiplier = 2.0;
+    else if (productType === 'Prédio Residencial') typeDifficultyMultiplier = 4.0;
+    else if (productType === 'Prédio Comercial') typeDifficultyMultiplier = 4.5;
+    else if (productType === 'Fábrica') typeDifficultyMultiplier = 5.0;
+    else if (productType === 'Shopping Center') typeDifficultyMultiplier = 6.0;
+    else if (productType === 'Estádio') typeDifficultyMultiplier = 8.0;
 
     const sizeDifficultyMultiplier = gameSize === 'AAA' ? 3 : gameSize === 'Médio' ? 1.5 : 1;
     const difficultyDivisor = (40 + (staff.devs + staff.designers) * 5) * sizeDifficultyMultiplier * typeDifficultyMultiplier;
@@ -697,6 +889,12 @@ export default function App() {
     else if (productType === 'Jogo de Tabuleiro') typeSalesMultiplier = 0.8;
     else if (productType === 'Brinquedo') typeSalesMultiplier = 1.1;
     else if (productType === 'Arcade') typeSalesMultiplier = 0.6;
+    else if (productType === 'Casa') typeSalesMultiplier = 0.05;
+    else if (productType === 'Prédio Residencial') typeSalesMultiplier = 0.02;
+    else if (productType === 'Prédio Comercial') typeSalesMultiplier = 0.01;
+    else if (productType === 'Fábrica') typeSalesMultiplier = 0.005;
+    else if (productType === 'Shopping Center') typeSalesMultiplier = 0.002;
+    else if (productType === 'Estádio') typeSalesMultiplier = 0.001;
 
     const sizeSalesMultiplier = gameSize === 'AAA' ? 5 : gameSize === 'Médio' ? 2 : 1;
     const totalSales = Math.floor((baseSales * scoreMultiplier) + (totalPoints * 2)) * sizeSalesMultiplier * typeSalesMultiplier;
@@ -753,6 +951,18 @@ export default function App() {
       gamePrice = gameSize === 'AAA' ? 150 : gameSize === 'Médio' ? 80 : 40;
     } else if (productType === 'Arcade') {
       gamePrice = gameSize === 'AAA' ? 5000 : gameSize === 'Médio' ? 2500 : 1000;
+    } else if (productType === 'Casa') {
+      gamePrice = gameSize === 'AAA' ? 1500000 : gameSize === 'Médio' ? 500000 : 150000;
+    } else if (productType === 'Prédio Residencial') {
+      gamePrice = gameSize === 'AAA' ? 25000000 : gameSize === 'Médio' ? 10000000 : 3000000;
+    } else if (productType === 'Prédio Comercial') {
+      gamePrice = gameSize === 'AAA' ? 35000000 : gameSize === 'Médio' ? 15000000 : 5000000;
+    } else if (productType === 'Fábrica') {
+      gamePrice = gameSize === 'AAA' ? 50000000 : gameSize === 'Médio' ? 20000000 : 8000000;
+    } else if (productType === 'Shopping Center') {
+      gamePrice = gameSize === 'AAA' ? 150000000 : gameSize === 'Médio' ? 80000000 : 30000000;
+    } else if (productType === 'Estádio') {
+      gamePrice = gameSize === 'AAA' ? 500000000 : gameSize === 'Médio' ? 200000000 : 80000000;
     } else {
       gamePrice = gameSize === 'AAA' ? 60 : gameSize === 'Médio' ? 40 : 20;
     }
@@ -809,8 +1019,9 @@ export default function App() {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
   };
 
-  const formatDate = (date: Date) => {
-    return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
   };
 
   const formatNumber = (val: number) => {
@@ -1022,6 +1233,28 @@ export default function App() {
                 </button>
               </div>
               <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500" placeholder="Ex: Apple" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Foco da Empresa</label>
+                <select 
+                  value={companyFocus} 
+                  onChange={e => setCompanyFocus(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 appearance-none"
+                >
+                  <option value="Geral">Geral (Equilibrado)</option>
+                  <option value="Software">Software & Jogos</option>
+                  <option value="Hardware">Hardware & Dispositivos</option>
+                  <option value="Mídia">Mídia & Entretenimento</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-1">Cor da Marca</label>
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2">
+                  <input type="color" value={logoColor} onChange={e => setLogoColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0" />
+                  <span className="text-white font-mono text-sm uppercase">{logoColor}</span>
+                </div>
+              </div>
             </div>
             <div className="flex justify-end">
               <button onClick={randomizeLocation} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
@@ -2534,42 +2767,207 @@ export default function App() {
       {/* MODAL: SELECIONAR PRODUTO */}
       {isProductSelectOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+          <div className="bg-slate-900 w-full max-w-3xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2"><Plus className="w-5 h-5 text-indigo-400"/> O que você deseja criar?</h2>
-              <button onClick={() => setIsProductSelectOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                {selectedCategory ? (
+                  <button onClick={() => setSelectedCategory(null)} className="hover:text-indigo-400 transition-colors flex items-center gap-1">
+                    <ChevronLeft className="w-5 h-5" /> Voltar
+                  </button>
+                ) : (
+                  <><Plus className="w-5 h-5 text-indigo-400"/> O que você deseja criar?</>
+                )}
+              </h2>
+              <button onClick={() => { setIsProductSelectOpen(false); setSelectedCategory(null); }} className="text-slate-400 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
-              {getAvailableProductTypes(gameDate.getFullYear()).map(type => (
-                <button key={type} onClick={() => openSetup(type)} className="p-4 bg-slate-950 hover:bg-indigo-600/20 border border-slate-800 hover:border-indigo-500/50 rounded-xl flex items-center gap-4 transition-all text-left group">
-                  <div className="w-12 h-12 bg-indigo-600/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
-                    {type === 'Jogo' || type === 'Jogo Online' ? <Gamepad2 className="w-6 h-6 text-indigo-400 group-hover:text-white" /> :
-                     type === 'Motor Gráfico' || type === 'Processador' ? <Cpu className="w-6 h-6 text-emerald-400 group-hover:text-white" /> :
-                     type === 'Console' || type === 'Console Portátil' ? <MonitorPlay className="w-6 h-6 text-purple-400 group-hover:text-white" /> :
-                     type === 'Computador' || type === 'Tablet' ? <Laptop className="w-6 h-6 text-blue-400 group-hover:text-white" /> :
-                     type === 'Celular' || type === 'Aplicativo' ? <Smartphone className="w-6 h-6 text-amber-400 group-hover:text-white" /> :
-                     type === 'Plataforma Digital' || type === 'Site' ? <Store className="w-6 h-6 text-rose-400 group-hover:text-white" /> :
-                     type === 'Rede Social' ? <Share2 className="w-6 h-6 text-cyan-400 group-hover:text-white" /> :
-                     type === 'Filme' || type === 'Série' || type === 'Programa de TV' || type === 'Serviço de Streaming' ? <MonitorPlay className="w-6 h-6 text-red-400 group-hover:text-white" /> :
-                     type === 'Sistema Operacional' || type === 'Placa de Vídeo' ? <Monitor className="w-6 h-6 text-sky-400 group-hover:text-white" /> :
-                     type === 'Smartwatch' ? <Star className="w-6 h-6 text-lime-400 group-hover:text-white" /> :
-                     type === 'Álbum Musical' || type === 'Dublagem/Audiobook' || type === 'Podcast' || type === 'Programa de Rádio' ? <Mic className="w-6 h-6 text-pink-400 group-hover:text-white" /> :
-                     type === 'Livro' || type === 'Revista' ? <Book className="w-6 h-6 text-orange-400 group-hover:text-white" /> :
-                     type === 'Jornal' ? <Newspaper className="w-6 h-6 text-gray-400 group-hover:text-white" /> :
-                     type === 'Jogo de Tabuleiro' ? <Puzzle className="w-6 h-6 text-yellow-400 group-hover:text-white" /> :
-                     type === 'Brinquedo' ? <Package className="w-6 h-6 text-teal-400 group-hover:text-white" /> :
-                     type === 'Arcade' ? <Joystick className="w-6 h-6 text-fuchsia-400 group-hover:text-white" /> :
-                     type === 'Óculos VR' ? <Glasses className="w-6 h-6 text-cyan-500 group-hover:text-white" /> :
-                     <Star className="w-6 h-6 text-indigo-400 group-hover:text-white" />}
-                  </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {!selectedCategory ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { id: 'Software & Jogos', icon: <Gamepad2 className="w-8 h-8 text-indigo-400" />, desc: 'Jogos, Apps e Sistemas' },
+                    { id: 'Hardware & Dispositivos', icon: <Cpu className="w-8 h-8 text-emerald-400" />, desc: 'Consoles, PCs e Celulares' },
+                    { id: 'Mídia & Entretenimento', icon: <MonitorPlay className="w-8 h-8 text-rose-400" />, desc: 'Filmes, Séries e Músicas' },
+                    { id: 'Físico & Impresso', icon: <Book className="w-8 h-8 text-amber-400" />, desc: 'Livros, Revistas e Brinquedos' },
+                    { id: 'Construções', icon: <Building2 className="w-8 h-8 text-sky-400" />, desc: 'Prédios, Fábricas e Lojas' }
+                  ].map(cat => {
+                    // Check if category has any available products
+                    const availableTypes = getAvailableProductTypes(gameDate.getFullYear());
+                    const categoryProducts = {
+                      'Software & Jogos': ['Jogo', 'Jogo Online', 'Aplicativo', 'Sistema Operacional', 'Motor Gráfico', 'Plataforma Digital', 'Rede Social', 'Site', 'Inteligência Artificial'],
+                      'Hardware & Dispositivos': ['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Óculos VR', 'Arcade'],
+                      'Mídia & Entretenimento': ['Filme', 'Série', 'Programa de TV', 'Serviço de Streaming', 'Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio'],
+                      'Físico & Impresso': ['Livro', 'Revista', 'Jornal', 'Jogo de Tabuleiro', 'Brinquedo'],
+                      'Construções': ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio']
+                    }[cat.id] || [];
+                    
+                    const hasProducts = categoryProducts.some(p => availableTypes.includes(p));
+                    
+                    if (!hasProducts) return null;
+
+                    return (
+                      <button 
+                        key={cat.id} 
+                        onClick={() => setSelectedCategory(cat.id)} 
+                        className="p-6 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 rounded-xl flex flex-col items-center gap-4 transition-all text-center group"
+                      >
+                        <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                          {cat.icon}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg">{cat.id}</h3>
+                          <p className="text-xs text-slate-400 mt-1">{cat.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {getAvailableProductTypes(gameDate.getFullYear())
+                    .filter(type => {
+                      const categoryProducts = {
+                        'Software & Jogos': ['Jogo', 'Jogo Online', 'Aplicativo', 'Sistema Operacional', 'Motor Gráfico', 'Plataforma Digital', 'Rede Social', 'Site', 'Inteligência Artificial'],
+                        'Hardware & Dispositivos': ['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Óculos VR', 'Arcade'],
+                        'Mídia & Entretenimento': ['Filme', 'Série', 'Programa de TV', 'Serviço de Streaming', 'Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio'],
+                        'Físico & Impresso': ['Livro', 'Revista', 'Jornal', 'Jogo de Tabuleiro', 'Brinquedo'],
+                        'Construções': ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio']
+                      }[selectedCategory] || [];
+                      return categoryProducts.includes(type);
+                    })
+                    .map(type => (
+                    <button key={type} onClick={() => { setSelectedCategory(null); openSetup(type); }} className="p-4 bg-slate-950 hover:bg-indigo-600/20 border border-slate-800 hover:border-indigo-500/50 rounded-xl flex items-center gap-4 transition-all text-left group">
+                      <div className="w-12 h-12 bg-indigo-600/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
+                        {type === 'Jogo' || type === 'Jogo Online' ? <Gamepad2 className="w-6 h-6 text-indigo-400 group-hover:text-white" /> :
+                         type === 'Motor Gráfico' || type === 'Processador' ? <Cpu className="w-6 h-6 text-emerald-400 group-hover:text-white" /> :
+                         type === 'Console' || type === 'Console Portátil' ? <MonitorPlay className="w-6 h-6 text-purple-400 group-hover:text-white" /> :
+                         type === 'Computador' || type === 'Tablet' ? <Laptop className="w-6 h-6 text-blue-400 group-hover:text-white" /> :
+                         type === 'Celular' || type === 'Aplicativo' ? <Smartphone className="w-6 h-6 text-amber-400 group-hover:text-white" /> :
+                         type === 'Plataforma Digital' || type === 'Site' ? <Store className="w-6 h-6 text-rose-400 group-hover:text-white" /> :
+                         type === 'Rede Social' ? <Share2 className="w-6 h-6 text-cyan-400 group-hover:text-white" /> :
+                         type === 'Filme' || type === 'Série' || type === 'Programa de TV' || type === 'Serviço de Streaming' ? <MonitorPlay className="w-6 h-6 text-red-400 group-hover:text-white" /> :
+                         type === 'Sistema Operacional' || type === 'Placa de Vídeo' ? <Monitor className="w-6 h-6 text-sky-400 group-hover:text-white" /> :
+                         type === 'Smartwatch' ? <Star className="w-6 h-6 text-lime-400 group-hover:text-white" /> :
+                         type === 'Álbum Musical' || type === 'Dublagem/Audiobook' || type === 'Podcast' || type === 'Programa de Rádio' ? <Mic className="w-6 h-6 text-pink-400 group-hover:text-white" /> :
+                         type === 'Livro' || type === 'Revista' ? <Book className="w-6 h-6 text-orange-400 group-hover:text-white" /> :
+                         type === 'Jornal' ? <Newspaper className="w-6 h-6 text-gray-400 group-hover:text-white" /> :
+                         type === 'Jogo de Tabuleiro' ? <Puzzle className="w-6 h-6 text-yellow-400 group-hover:text-white" /> :
+                         type === 'Brinquedo' ? <Package className="w-6 h-6 text-teal-400 group-hover:text-white" /> :
+                         type === 'Arcade' ? <Joystick className="w-6 h-6 text-fuchsia-400 group-hover:text-white" /> :
+                         type === 'Óculos VR' ? <Glasses className="w-6 h-6 text-cyan-500 group-hover:text-white" /> :
+                         ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio'].includes(type) ? <Building2 className="w-6 h-6 text-sky-400 group-hover:text-white" /> :
+                         <Star className="w-6 h-6 text-indigo-400 group-hover:text-white" />}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">{type}</h3>
+                        <p className="text-xs text-slate-400">Desenvolva um novo projeto.</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: SETUP DE BANDA */}
+      {isBandSetupOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 w-full max-w-xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Mic className="w-5 h-5 text-pink-400" /> Nova Banda / Artista
+              </h2>
+              <button onClick={() => setIsBandSetupOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-6">
+                {bands.length > 0 && (
                   <div>
-                    <h3 className="font-bold text-white">{type}</h3>
-                    <p className="text-xs text-slate-400">Desenvolva um novo projeto.</p>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Selecionar Banda Existente</label>
+                    <select
+                      value={selectedBandId === null ? '' : selectedBandId}
+                      onChange={(e) => setSelectedBandId(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 transition-all appearance-none"
+                    >
+                      <option value="">-- Criar Nova Banda --</option>
+                      {bands.map(band => (
+                        <option key={band.id} value={band.id}>{band.name} ({band.genre})</option>
+                      ))}
+                    </select>
                   </div>
-                </button>
-              ))}
+                )}
+
+                {selectedBandId === null && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Nome da Banda / Artista</label>
+                      <input 
+                        type="text" 
+                        value={newBandName}
+                        onChange={(e) => setNewBandName(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 transition-all"
+                        placeholder="Ex: The Beatles"
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Gênero Musical</label>
+                        <select 
+                          value={newBandGenre} 
+                          onChange={(e) => setNewBandGenre(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 transition-all appearance-none"
+                        >
+                          <option>Pop</option>
+                          <option>Rock</option>
+                          <option>Hip Hop</option>
+                          <option>Eletrônica</option>
+                          <option>Sertanejo</option>
+                          <option>Axé Music</option>
+                          <option>Clássica</option>
+                          <option>Jazz</option>
+                          <option>Metal</option>
+                          <option>Indie</option>
+                          <option>R&B</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Número de Integrantes</label>
+                        <input 
+                          type="number" 
+                          min="1"
+                          max="10"
+                          value={newBandMembers}
+                          onChange={(e) => setNewBandMembers(Number(e.target.value))}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-800 bg-slate-800/30 flex justify-end gap-4">
+              <button 
+                onClick={() => setIsBandSetupOpen(false)}
+                className="px-6 py-3 rounded-xl font-bold text-slate-300 hover:text-white hover:bg-slate-700 transition-all"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={startBandProject}
+                className="px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-900/20 flex items-center gap-2"
+              >
+                <Mic className="w-5 h-5" /> Continuar para Álbum
+              </button>
             </div>
           </div>
         </div>
@@ -2617,14 +3015,23 @@ export default function App() {
             <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Nome do Projeto</label>
-                <input 
-                  type="text" 
-                  value={gameName}
-                  onChange={(e) => setGameName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                  placeholder="Ex: Half-Life 3"
-                  autoFocus
-                />
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={gameName}
+                    onChange={(e) => setGameName(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    placeholder="Ex: Half-Life 3"
+                    autoFocus
+                  />
+                  <button 
+                    onClick={() => generateRandomName(productType)}
+                    className="bg-slate-800 hover:bg-slate-700 text-white px-4 rounded-xl border border-slate-700 transition-colors flex items-center justify-center"
+                    title="Gerar nome aleatório"
+                  >
+                    <Dices className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {(productType === 'Jogo' || productType === 'Filme' || productType === 'Série' || productType === 'Programa de TV' || productType === 'Aplicativo' || productType === 'Sistema Operacional' || productType === 'Álbum Musical' || productType === 'Podcast' || productType === 'Programa de Rádio' || productType === 'Livro' || productType === 'Jornal' || productType === 'Revista' || productType === 'Jogo de Tabuleiro' || productType === 'Brinquedo' || productType === 'Arcade') && (
@@ -2661,6 +3068,7 @@ export default function App() {
                           <option>Hip Hop</option>
                           <option>Eletrônica</option>
                           <option>Sertanejo</option>
+                          <option>Axé Music</option>
                           <option>Clássica</option>
                           <option>Jazz</option>
                         </>
