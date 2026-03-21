@@ -5,9 +5,18 @@ import {
   Building2, Landmark, Briefcase, Share2, Award, Presentation, Search, 
   ShoppingCart, GraduationCap, MousePointer2, LayoutGrid, BarChart3, PieChart, 
   Calendar, FileText, Globe, Settings, Building, Monitor, Target, Rocket, Clock, TrendingDown, AlertTriangle, Mic,
-  Book, Radio, Puzzle, Package, Joystick, Newspaper, Glasses, ChevronLeft, Dices
+  Book, Radio, Puzzle, Package, Joystick, Newspaper, Glasses, ChevronLeft, Dices, CheckCircle2, Check, Pause, Play,
+  MessageSquare, ThumbsUp, ThumbsDown, Car, Bitcoin, Bot, Brain, Plane, Printer, Camera, Headphones, Tv, Film, Music, Heart, PenTool
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+interface Rival {
+  id: number;
+  name: string;
+  marketShare: number;
+  fans: number;
+  lastRelease?: { name: string; score: number; date: Date };
+}
 
 type Game = {
   id: number;
@@ -15,15 +24,79 @@ type Game = {
   type: string;
   genre: string;
   platform: string;
+  theme?: string;
+  visualStyle?: string;
+  targetAudience?: string;
+  marketingCampaigns?: string[];
+  tvNetworks?: string[];
+  regions?: string[];
+  isSubscription?: boolean;
+  activeSubscribers?: number;
+  monthlyFee?: number;
+  maintenanceCost?: number;
+  isActive?: boolean;
   design: number;
   tech: number;
   bugs: number;
   score: number;
   sales: number;
   revenue: number;
+  hasMerch?: boolean;
+  hasEsports?: boolean;
 };
 
-type Tab = 'studio' | 'hr' | 'marketing' | 'infra' | 'market' | 'history' | 'stats' | 'research' | 'awards' | 'finance' | 'calendar' | 'store' | 'world' | 'settings';
+type Tab = 'studio' | 'hr' | 'marketing' | 'infra' | 'market' | 'history' | 'stats' | 'research' | 'awards' | 'finance' | 'calendar' | 'store' | 'world' | 'settings' | 'hardware';
+
+const AVAILABLE_FEATURES = [
+  { id: 'soundtrack', name: 'Trilha Sonora Épica', cost: 50000, rp: 10, boost: 0.2 },
+  { id: 'localization', name: 'Localização Global', cost: 100000, rp: 20, boost: 0.3 },
+  { id: 'accessibility', name: 'Acessibilidade Total', cost: 30000, rp: 15, boost: 0.1 },
+  { id: 'nextgen', name: 'Visual Next-Gen', cost: 200000, rp: 50, boost: 0.4 },
+  { id: 'vr', name: 'Suporte a VR/AR', cost: 150000, rp: 40, boost: 0.3 },
+  { id: 'social', name: 'Integração Social', cost: 80000, rp: 25, boost: 0.2 },
+  { id: 'ai', name: 'IA Avançada', cost: 120000, rp: 35, boost: 0.3 },
+  { id: 'cloud', name: 'Otimização em Nuvem', cost: 90000, rp: 30, boost: 0.2 },
+  { id: 'postlaunch', name: 'Plano Pós-Lançamento', cost: 100000, rp: 10, boost: 0.2 },
+];
+
+const MARKETING_OPTIONS = [
+  { id: 'boca_a_boca', name: 'Boca a Boca', cost: 0, year: 0, hype: 1.0 },
+  { id: 'panfletos', name: 'Panfletos e Cartazes', cost: 5000, year: 0, hype: 1.1 },
+  { id: 'jornal', name: 'Jornal / Revista', cost: 15000, year: 0, hype: 1.2 },
+  { id: 'outdoors', name: 'Outdoors', cost: 50000, year: 1900, hype: 1.4 },
+  { id: 'radio', name: 'Rádio', cost: 20000, year: 1920, hype: 1.3 },
+  { id: 'tv', name: 'Televisão', cost: 100000, year: 1950, hype: 1.6 },
+  { id: 'eventos', name: 'Patrocínio de Eventos', cost: 200000, year: 1960, hype: 1.8 },
+  { id: 'internet', name: 'Banners na Internet', cost: 30000, year: 1995, hype: 1.3 },
+  { id: 'redes_sociais', name: 'Redes Sociais', cost: 40000, year: 2005, hype: 1.5 },
+  { id: 'influenciadores', name: 'Influenciadores', cost: 80000, year: 2010, hype: 1.7 },
+  { id: 'viral', name: 'Campanha Viral', cost: 150000, year: 2015, hype: 1.9 },
+];
+
+const DEFAULT_TV_NETWORKS = [
+  { id: 'globo', name: 'Rede Global', cost: 500000, hype: 1.8 },
+  { id: 'sbt', name: 'Sistema Brasileiro de Transmissão', cost: 200000, hype: 1.5 },
+  { id: 'record', name: 'TV Recordação', cost: 150000, hype: 1.4 },
+  { id: 'band', name: 'Bandeirantes', cost: 100000, hype: 1.2 },
+  { id: 'mtv', name: 'Music TV', cost: 80000, hype: 1.3 },
+];
+
+const REGIONS = [
+  { id: 'na', name: 'América do Norte', costMultiplier: 0, salesMultiplier: 1.0 },
+  { id: 'eu', name: 'Europa', costMultiplier: 0.2, salesMultiplier: 0.8 },
+  { id: 'as', name: 'Ásia', costMultiplier: 0.3, salesMultiplier: 1.2 },
+  { id: 'sa', name: 'América Latina', costMultiplier: 0.1, salesMultiplier: 0.5 },
+];
+
+const SUBSCRIPTION_TYPES = ['Jogo Online', 'Serviço de Streaming', 'Rede Social', 'Plataforma Digital', 'Plataforma de Streaming', 'Aplicativo de Relacionamento', 'Metaverso'];
+
+const AVAILABLE_VIPS = [
+  { id: 'vip_director', name: 'Steven Spielburg', role: 'Diretor Lendário', salary: 150000, boost: 1.5 },
+  { id: 'vip_designer', name: 'Hideo Kojimo', role: 'Game Designer', salary: 120000, boost: 1.2 },
+  { id: 'vip_singer', name: 'Taylor Swiftly', role: 'Popstar', salary: 200000, boost: 1.8 },
+  { id: 'vip_writer', name: 'George R.R. Martinho', role: 'Roteirista', salary: 100000, boost: 1.0 },
+  { id: 'vip_programmer', name: 'John Carmacko', role: 'Gênio Tech', salary: 180000, boost: 1.6 },
+];
 
 const DEFAULT_UPGRADES = [
   { id: 'graphics', name: 'Gráficos & Visual', cost: 50, level: 0, maxLevel: 30, description: 'Melhora a qualidade visual de jogos, filmes e séries.' },
@@ -41,7 +114,13 @@ const DEFAULT_UPGRADES = [
   { id: 'div_editora', name: 'Divisão: Editora', cost: 50000, level: 0, maxLevel: 1, description: 'Desbloqueia a criação de Jornais, Revistas, Livros e Jogos de Tabuleiro.' },
   { id: 'div_gravadora', name: 'Divisão: Gravadora', cost: 100000, level: 0, maxLevel: 1, description: 'Desbloqueia a criação de Álbuns Musicais, Programas de Rádio e Podcasts.' },
   { id: 'div_cinema', name: 'Divisão: Estúdio de Cinema', cost: 250000, level: 0, maxLevel: 1, description: 'Desbloqueia a produção de Filmes, Séries e Programas de TV.' },
-  { id: 'div_hardware', name: 'Divisão: Hardware', cost: 500000, level: 0, maxLevel: 1, description: 'Desbloqueia a criação de Consoles, Computadores, Celulares e Arcades.' }
+  { id: 'div_hardware', name: 'Divisão: Hardware', cost: 500000, level: 0, maxLevel: 1, description: 'Desbloqueia a criação de Consoles, Computadores, Celulares e Arcades.' },
+  { id: 'vacuum_tubes', name: 'Válvulas Termiônicas', cost: 40, level: 0, maxLevel: 10, description: 'Tecnologia base para os primeiros computadores e rádios.' },
+  { id: 'transistors', name: 'Transistores', cost: 80, level: 0, maxLevel: 15, description: 'Substitui as válvulas, permitindo dispositivos menores e mais eficientes.' },
+  { id: 'punch_cards', name: 'Cartões Perfurados', cost: 30, level: 0, maxLevel: 5, description: 'Melhora a entrada de dados e processamento em mainframes.' },
+  { id: 'music_videos', name: 'Produção de Videoclipes', cost: 25000, level: 0, maxLevel: 1, description: 'Permite produzir videoclipes junto com Álbuns Musicais.' },
+  { id: 'shows_locais', name: 'Estrutura para Shows', cost: 30000, level: 0, maxLevel: 1, description: 'Permite que suas bandas realizem shows para ganhar dinheiro e fãs.' },
+  { id: 'turne_mundial', name: 'Logística de Turnês', cost: 150000, level: 0, maxLevel: 1, description: 'Permite que suas bandas realizem turnês mundiais altamente lucrativas.' }
 ];
 
 function NavButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
@@ -200,8 +279,6 @@ export default function App() {
   const [fans, setFans] = useState(0);
   const [history, setHistory] = useState<Game[]>([]);
   const [awardsWon, setAwardsWon] = useState<{name: string, description: string, date: Date}[]>([]);
-  const [news, setNews] = useState<{id: number, title: string, content: string, date: Date, read: boolean}[]>([]);
-  const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error' | 'info'} | null>(null);
   const [promptModal, setPromptModal] = useState<{isOpen: boolean, title: string, message: string, options?: string[], onConfirm: (value: string) => void, onCancel: () => void}>({isOpen: false, title: '', message: '', onConfirm: () => {}, onCancel: () => {}});
   const [activeTab, setActiveTab] = useState<Tab>('studio');
@@ -213,6 +290,9 @@ export default function App() {
   const [stores, setStores] = useState<{name: string, level: number}[]>([]);
   const [researchLabs, setResearchLabs] = useState(0);
   const [factories, setFactories] = useState(0);
+  const [hasStreaming, setHasStreaming] = useState(false);
+  const [subscribers, setSubscribers] = useState(0);
+  const [servers, setServers] = useState(0);
   const [researchPoints, setResearchPoints] = useState(0);
   const [techLevel, setTechLevel] = useState(1);
   const [upgrades, setUpgrades] = useState<{id: string, name: string, cost: number, level: number, maxLevel: number, description: string}[]>(DEFAULT_UPGRADES);
@@ -224,8 +304,25 @@ export default function App() {
     { id: 3, name: 'Somy', price: 120, owned: 0 },
   ]);
   const [socialAccounts, setSocialAccounts] = useState<{platform: string, followers: number}[]>([]);
+  const [commentators, setCommentators] = useState(0);
+  const [socialComments, setSocialComments] = useState<{id: number, author: string, content: string, platform: string, date: Date, sentiment: 'positive' | 'negative' | 'neutral', isHired?: boolean}[]>([]);
   const [companies, setCompanies] = useState<{id: number, name: string, type: string, value: number, income: number}[]>([]);
+  const [playerMarketShare, setPlayerMarketShare] = useState(0.1);
+  const [rivals, setRivals] = useState<Rival[]>([
+    { id: 1, name: 'Microhard', marketShare: 35.0, fans: 5000000 },
+    { id: 2, name: 'Pear', marketShare: 25.0, fans: 4000000 },
+    { id: 3, name: 'Nintedo', marketShare: 20.0, fans: 8000000 },
+    { id: 4, name: 'Pony', marketShare: 19.9, fans: 3000000 },
+  ]);
   const [gameDate, setGameDate] = useState(new Date(2024, 0, 1));
+  const [isPaused, setIsPaused] = useState(false);
+
+  // New Features
+  const [hardware, setHardware] = useState<{id: string, name: string, type: string, unitsSold: number}[]>([]);
+  const [hiredVips, setHiredVips] = useState<{id: string, name: string, role: string, salary: number, boost: number}[]>([]);
+  const [hypeMultiplier, setHypeMultiplier] = useState(1.0);
+  const [lastConventionDate, setLastConventionDate] = useState<number | null>(null);
+  const [productFeatures, setProductFeatures] = useState<string[]>([]);
 
   // Equipe (Staff)
   const [staff, setStaff] = useState({ devs: 1, designers: 1, testers: 0, researchers: 0 });
@@ -245,12 +342,20 @@ export default function App() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isEventOpen, setIsEventOpen] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<{name: string, description: string, reward: number, fans: number} | null>(null);
+  const [currentTrend, setCurrentTrend] = useState<{type: 'genre' | 'theme', name: string, multiplier: number} | null>(null);
 
   // Setup State
   const [gameName, setGameName] = useState('');
   const [productType, setProductType] = useState('Jogo');
   const [genre, setGenre] = useState('Ação');
+  const [theme, setTheme] = useState('Contemporâneo');
+  const [visualStyle, setVisualStyle] = useState('3D Realista');
   const [platform, setPlatform] = useState('Computador');
+  const [targetAudience, setTargetAudience] = useState('Geral');
+  const [marketingCampaigns, setMarketingCampaigns] = useState<string[]>(['boca_a_boca']);
+  const [selectedTvNetworks, setSelectedTvNetworks] = useState<string[]>([]);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>(['na']);
+  const [playerCompany, setPlayerCompany] = useState({ isPublic: false, sharePrice: 10, sharesSold: 0 });
   const [secondPlatform, setSecondPlatform] = useState('Nenhuma');
   const [gameSize, setGameSize] = useState('Indie');
   const [focusEngine, setFocusEngine] = useState(50);
@@ -261,8 +366,9 @@ export default function App() {
   const [focusPolishing, setFocusPolishing] = useState(50);
   const [iconStyle, setIconStyle] = useState('Minimalista');
   const [monetization, setMonetization] = useState('Pago');
-  const [targetAudience, setTargetAudience] = useState('Jovens');
   const [rating, setRating] = useState('Livre');
+  const [albumTracks, setAlbumTracks] = useState(10);
+  const [hasMusicVideos, setHasMusicVideos] = useState(false);
 
   // Dev State
   const [progress, setProgress] = useState(0);
@@ -276,19 +382,21 @@ export default function App() {
   // Save / Load System
   const stateRef = useRef({
     gameState, gameMode, startYear, creationStep, playerStats, perks, ceoName, companyName, companyFocus, logoColor, country, stateName, city, bands,
-    money, fans, history, awardsWon, news, officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
-    loans, bankOwned, stocks, socialAccounts, companies, gameDate: gameDate.getTime(), staff
+    money, fans, history, awardsWon, officeLevel, stores, researchLabs, factories, hasStreaming, subscribers, servers, researchPoints, techLevel, upgrades,
+    loans, bankOwned, stocks, socialAccounts, companies, gameDate: gameDate.getTime(), staff,
+    hardware, hiredVips, hypeMultiplier, lastConventionDate
   });
 
   useEffect(() => {
     stateRef.current = {
       gameState, gameMode, startYear, creationStep, playerStats, perks, ceoName, companyName, companyFocus, logoColor, country, stateName, city, bands,
-      money, fans, history, awardsWon, news, officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
-      loans, bankOwned, stocks, socialAccounts, companies, gameDate: gameDate.getTime(), staff
+      money, fans, history, awardsWon, officeLevel, stores, researchLabs, factories, hasStreaming, subscribers, servers, researchPoints, techLevel, upgrades,
+      loans, bankOwned, stocks, socialAccounts, companies, gameDate: gameDate.getTime(), staff,
+      hardware, hiredVips, hypeMultiplier, lastConventionDate
     };
   }, [gameState, gameMode, startYear, creationStep, playerStats, perks, ceoName, companyName, companyFocus, logoColor, country, stateName, city, bands,
-      money, fans, history, awardsWon, news, officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
-      loans, bankOwned, stocks, socialAccounts, companies, gameDate, staff]);
+      money, fans, history, awardsWon, officeLevel, stores, researchLabs, factories, hasStreaming, subscribers, servers, researchPoints, techLevel, upgrades,
+      loans, bankOwned, stocks, socialAccounts, companies, gameDate, staff, hardware, hiredVips, hypeMultiplier, lastConventionDate]);
 
   useEffect(() => {
     const saveInterval = setInterval(() => {
@@ -322,11 +430,13 @@ export default function App() {
         setFans(parsed.fans);
         setHistory(parsed.history);
         setAwardsWon(parsed.awardsWon);
-        setNews(parsed.news);
         setOfficeLevel(parsed.officeLevel);
         setStores(parsed.stores);
         setResearchLabs(parsed.researchLabs);
         setFactories(parsed.factories);
+        if (parsed.hasStreaming !== undefined) setHasStreaming(parsed.hasStreaming);
+        if (parsed.subscribers !== undefined) setSubscribers(parsed.subscribers);
+        if (parsed.servers !== undefined) setServers(parsed.servers);
         setResearchPoints(parsed.researchPoints);
         setTechLevel(parsed.techLevel);
         setUpgrades(parsed.upgrades);
@@ -337,6 +447,10 @@ export default function App() {
         setCompanies(parsed.companies);
         setGameDate(new Date(parsed.gameDate));
         setStaff(parsed.staff);
+        if (parsed.hardware) setHardware(parsed.hardware);
+        if (parsed.hiredVips) setHiredVips(parsed.hiredVips);
+        if (parsed.hypeMultiplier !== undefined) setHypeMultiplier(parsed.hypeMultiplier);
+        if (parsed.lastConventionDate !== undefined) setLastConventionDate(parsed.lastConventionDate);
       } catch (e) {
         console.error("Failed to load save", e);
       }
@@ -350,7 +464,15 @@ export default function App() {
       timer = setInterval(() => {
         setProgress(p => {
           // Velocidade baseada no tamanho total da equipe e tamanho do jogo
-          const sizeMultiplier = gameSize === 'AAA' ? 0.2 : gameSize === 'Médio' ? 0.5 : 1;
+          let sizeMultiplier = gameSize === 'AAA' ? 0.2 : gameSize === 'Médio' ? 0.5 : 1;
+          
+          if (productType === 'Álbum Musical') {
+            sizeMultiplier = sizeMultiplier * (10 / Math.max(1, albumTracks));
+            if (hasMusicVideos) {
+              sizeMultiplier *= 0.6; // 40% slower if making music videos
+            }
+          }
+          
           const speedBoost = (1 + (staff.devs + staff.designers + staff.testers) * 0.1) * sizeMultiplier;
           const next = p + (1.0 * speedBoost);
           return next > 100 ? 100 : next;
@@ -382,6 +504,8 @@ export default function App() {
   // Monthly Income (Bank & Stores & Companies) & Social Media Growth & Loans & Stocks & News
   useEffect(() => {
     const timer = setInterval(() => {
+      if (isPaused) return;
+      
       let monthlyIncome = 0;
       let monthlyExpense = 0;
       
@@ -400,6 +524,42 @@ export default function App() {
         monthlyIncome += company.income;
       });
 
+      // VIP Salaries
+      hiredVips.forEach(vip => {
+        monthlyExpense += vip.salary;
+      });
+
+      // Hardware Sales & Income
+      setHardware(prevHardware => {
+        let hwIncome = 0;
+        const updated = prevHardware.map(hw => {
+          const sales = Math.floor(Math.random() * 50000) + 10000;
+          const profitPerUnit = hw.type === 'Console' ? 50 : 150;
+          hwIncome += sales * profitPerUnit;
+          return { ...hw, unitsSold: hw.unitsSold + sales };
+        });
+        if (hwIncome > 0) {
+          setMoney(m => m + hwIncome);
+        }
+        return updated;
+      });
+
+      // eSports Income
+      const esportsGames = history.filter(g => g.hasEsports);
+      if (esportsGames.length > 0) {
+        const esportsIncome = esportsGames.length * 250000; // $250k per active league
+        monthlyIncome += esportsIncome;
+        setFans(f => f + (esportsGames.length * 5000)); // Passive fans from eSports
+      }
+
+      // Hype Decay
+      setHypeMultiplier(prev => {
+        if (prev > 1.0) {
+          return Math.max(1.0, prev - 0.05); // Decays 0.05 per month
+        }
+        return prev;
+      });
+
       // Loans Payment (5% of remaining per month)
       setLoans(currentLoans => {
         const newLoans = currentLoans.map(loan => {
@@ -416,6 +576,52 @@ export default function App() {
         return { ...stock, price: Math.max(10, Math.floor(stock.price * fluctuation)) };
       }));
 
+      // Market Trends (10% chance to change every month)
+      if (Math.random() < 0.1) {
+        const isGenreTrend = Math.random() > 0.5;
+        const trendName = isGenreTrend 
+          ? ['Ação', 'RPG', 'Estratégia', 'Simulação', 'Esportes', 'Comédia', 'Drama', 'Ficção Científica', 'Terror', 'Documentário', 'Pop', 'Rock', 'Hip Hop', 'Eletrônica', 'Clássica'][Math.floor(Math.random() * 15)]
+          : ['Fantasia', 'Sci-Fi', 'Contemporâneo', 'Histórico', 'Cyberpunk', 'Steampunk', 'Pós-Apocalíptico', 'Super-Heróis', 'Mistério', 'Romance'][Math.floor(Math.random() * 10)];
+        
+        setCurrentTrend({
+          type: isGenreTrend ? 'genre' : 'theme',
+          name: trendName,
+          multiplier: 1.2 + (Math.random() * 0.3) // 1.2x to 1.5x sales multiplier
+        });
+      }
+
+      // Player Stock Fluctuation
+      setPlayerCompany(prev => {
+        if (!prev.isPublic) return prev;
+        const performance = (monthlyIncome - monthlyExpense) > 0 ? 1.05 : 0.95;
+        const fluctuation = performance + (Math.random() * 0.1 - 0.05);
+        return { ...prev, sharePrice: Math.max(1, Math.floor(prev.sharePrice * fluctuation)) };
+      });
+
+      // Subscriptions / SaaS
+      setHistory(prevHistory => {
+        let subIncome = 0;
+        let subExpense = 0;
+        const updatedHistory = prevHistory.map(game => {
+          if (game.isSubscription && game.isActive && game.activeSubscribers) {
+            // Churn 2% to 10%
+            const churnRate = 0.02 + (Math.random() * 0.08);
+            const newSubscribers = Math.floor(game.activeSubscribers * (1 - churnRate));
+            
+            subIncome += newSubscribers * (game.monthlyFee || 0);
+            subExpense += newSubscribers * (game.maintenanceCost || 0);
+
+            return { ...game, activeSubscribers: newSubscribers };
+          }
+          return game;
+        });
+        
+        if (subIncome > 0 || subExpense > 0) {
+          setMoney(m => m + subIncome - subExpense);
+        }
+        return updatedHistory;
+      });
+
       if (monthlyIncome > 0 || monthlyExpense > 0) {
         setMoney(m => m + monthlyIncome - monthlyExpense);
       }
@@ -423,13 +629,130 @@ export default function App() {
       // Social Media Growth
       if (socialAccounts.length > 0) {
         setSocialAccounts(accounts => accounts.map(account => {
-          const growth = Math.floor(Math.random() * 50) + 10; // Crescimento aleatório
+          const growth = Math.floor(Math.random() * 50) + 10 + (commentators * 5); // Comentaristas ajudam no crescimento
           return { ...account, followers: account.followers + growth };
         }));
         
         // Adiciona fãs globais baseados no crescimento das redes sociais
-        const totalGrowth = socialAccounts.length * (Math.floor(Math.random() * 20) + 5);
+        const totalGrowth = socialAccounts.length * (Math.floor(Math.random() * 20) + 5 + commentators);
         setFans(f => f + totalGrowth);
+
+        // Gera comentários (20% de chance por mês se tiver redes sociais)
+        if (Math.random() < 0.2 + (commentators * 0.05)) {
+          const randomAccount = socialAccounts[Math.floor(Math.random() * socialAccounts.length)];
+          const latestProduct = history.length > 0 ? history[0].name : undefined;
+          
+          const year = gameDate.getFullYear();
+          const authors = ['João Silva', 'Maria Oliveira', 'Pedro Santos', 'Ana Costa', 'Lucas Pereira', 'Juliana Lima', 'Marcos Rocha', 'Fernanda Souza', 'Rafael Alves', 'Camila Martins'];
+          let positiveComments = [
+            'Incrível! Mal posso esperar para ver mais.',
+            'Melhor coisa que vi hoje!',
+            'Isso é exatamente o que eu precisava.',
+            'Parabéns pelo trabalho, está fantástico!',
+            'Sensacional! Já sou fã.',
+            'Muito bom, continuem assim!',
+            'Qualidade impecável.',
+            'Isso vai mudar o mercado!',
+            'Simplesmente perfeito.',
+            'Estou amando acompanhar isso.'
+          ];
+          let negativeComments = [
+            'Poderia ser melhor...',
+            'Não gostei muito da direção que isso está tomando.',
+            'Esperava mais, sinceramente.',
+            'Achei meio sem graça.',
+            'Tem muito o que melhorar ainda.',
+            'Não faz meu estilo.',
+            'Achei o preço meio alto para o que oferece.',
+            'O anterior era melhor.',
+            'Muitos bugs/problemas técnicos.',
+            'Não recomendo.'
+          ];
+          let neutralComments = [
+            'Interessante, vamos ver no que dá.',
+            'Alguém sabe quando lança o próximo?',
+            'Legal.',
+            'Ok, mas nada de especial.',
+            'Vou esperar as reviews antes de decidir.',
+            'O que vocês acharam?',
+            'Diferente do que eu imaginava.',
+            'Bom, mas tem pontos a melhorar.',
+            'Vou dar uma chance.',
+            'Parece promissor.'
+          ];
+
+          if (year >= 1950 && year < 1970) {
+            positiveComments.push(
+              'Isso é o futuro!',
+              'Minha família toda adorou esse Mainframe!',
+              'A calculadora eletrônica é mágica!',
+              'O amanhã chegou hoje!',
+              'Que maravilha da ciência moderna!',
+              'Isso é tecnologia de ponta!',
+              'Fiquei impressionado com a precisão!',
+              'O rádio nunca mais será o mesmo!'
+            );
+            negativeComments.push(
+              'Isso é coisa de ficção científica, não vai dar certo.',
+              'Muito caro para um cidadão comum.',
+              'Achei muito complicado de operar.',
+              'Prefiro os métodos tradicionais.',
+              'Isso ocupa muito espaço na sala.',
+              'Não vejo utilidade prática nisso ainda.'
+            );
+            neutralComments.push(
+              'Será que isso vai substituir o rádio?',
+              'Interessante, mas parece muito caro.',
+              'Ouvi dizer que os transistores são o futuro.',
+              'O que os cientistas vão inventar agora?',
+              'Parece promissor, mas ainda prefiro o jornal.'
+            );
+          }
+
+          const sentimentRoll = Math.random();
+          let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
+          let content = '';
+          let isHired = false;
+
+          // Hired commentators boost positive sentiment
+          const positiveChance = 0.3 + (commentators * 0.1);
+          
+          if (sentimentRoll < positiveChance) {
+            sentiment = 'positive';
+            content = positiveComments[Math.floor(Math.random() * positiveComments.length)];
+            // If it was a "boosted" chance, mark as hired
+            if (sentimentRoll >= 0.3 && sentimentRoll < positiveChance) {
+              isHired = true;
+            }
+          } else if (sentimentRoll < 0.7) {
+            sentiment = 'neutral';
+            content = neutralComments[Math.floor(Math.random() * neutralComments.length)];
+          } else {
+            sentiment = 'negative';
+            content = negativeComments[Math.floor(Math.random() * negativeComments.length)];
+          }
+
+          if (latestProduct && Math.random() < 0.5) {
+            content = `[${latestProduct}] ${content}`;
+          }
+
+          const newComment = {
+            id: Date.now() + Math.random(),
+            author: authors[Math.floor(Math.random() * authors.length)],
+            content,
+            platform: randomAccount.platform,
+            date: new Date(gameDate),
+            sentiment,
+            isHired
+          };
+
+          setSocialComments(prev => [newComment, ...prev].slice(0, 50));
+        }
+      }
+
+      // Custo dos comentaristas contratados ($2000 por mês cada)
+      if (commentators > 0) {
+        monthlyExpense += commentators * 2000;
       }
 
       // Research Generation
@@ -443,17 +766,63 @@ export default function App() {
         const next = new Date(prev);
         next.setMonth(next.getMonth() + 1);
         
+        // Merch Income
+        const merchProducts = history.filter(g => g.hasMerch);
+        if (merchProducts.length > 0 && factories > 0) {
+          const mIncome = merchProducts.length * factories * 15000;
+          setMoney(m => m + mIncome);
+        }
+
+        // Streaming Platform
+        if (hasStreaming) {
+          const maxCapacity = servers * 500000;
+          const catalogValue = history.reduce((acc, g) => acc + g.score, 0);
+          const growth = Math.floor(catalogValue * 500 + (fans * 0.01));
+          
+          setSubscribers(s => {
+            const newSubs = Math.min(maxCapacity, s + growth);
+            setMoney(m => m + (newSubs * 15)); // $15 por assinante
+            return newSubs;
+          });
+        }
+        
         // Generate News (10% chance per month)
-        if (Math.random() < 0.1) {
-          const newsTopics = [
-            { title: 'Nova tendência no mercado!', content: 'Os consumidores estão buscando mais inovação em produtos tecnológicos.' },
-            { title: 'Crise na indústria de semicondutores', content: 'Os preços de produção de hardware podem aumentar no próximo trimestre.' },
-            { title: 'Evento de tecnologia anunciado', content: 'A maior feira de tecnologia do ano acontecerá em breve!' },
-            { title: 'Rumores sobre a concorrência', content: 'Uma empresa rival está prestes a lançar um produto revolucionário.' },
-            { title: 'Mudança de comportamento', content: 'Pesquisas indicam que o público jovem está consumindo mais conteúdo digital.' }
-          ];
-          const randomNews = newsTopics[Math.floor(Math.random() * newsTopics.length)];
-          setNews(n => [{ id: Date.now(), ...randomNews, date: next, read: false }, ...n].slice(0, 20)); // Keep last 20 news
+        // Rival Actions
+        if (Math.random() < 0.15) {
+          const score = (Math.random() * 5) + 5;
+          const isHit = score > 8.5;
+          const releaseNames = ['Sistema X', 'Console Z', 'App Max', 'Ultra Phone', 'Game Y', 'TechBook', 'CloudNet', 'SmartOS'];
+          const releaseName = releaseNames[Math.floor(Math.random() * releaseNames.length)];
+          const marketShareGain = (score * 0.05);
+
+          setPlayerMarketShare(prevPlayerShare => {
+            const newPlayerShare = Math.max(0.1, prevPlayerShare - (marketShareGain * (prevPlayerShare / 100)));
+            const targetRivalShare = 100 - newPlayerShare;
+
+            setRivals(currentRivals => {
+              const randomRivalIndex = Math.floor(Math.random() * currentRivals.length);
+              const rival = currentRivals[randomRivalIndex];
+              
+              const newRivals = [...currentRivals];
+              newRivals[randomRivalIndex] = {
+                ...rival,
+                lastRelease: { name: releaseName, score, date: next },
+                marketShare: rival.marketShare + marketShareGain,
+                fans: rival.fans + Math.floor(score * 10000)
+              };
+
+              const totalRivalShare = newRivals.reduce((acc, r) => acc + r.marketShare, 0);
+              
+              const normalizedRivals = newRivals.map(r => ({
+                ...r,
+                marketShare: (r.marketShare / totalRivalShare) * targetRivalShare
+              }));
+
+              return normalizedRivals;
+            });
+
+            return newPlayerShare;
+          });
         }
 
         // Random Events Trigger
@@ -503,7 +872,7 @@ export default function App() {
     }, 10000); // A cada 10 segundos (simulando um mês)
 
     return () => clearInterval(timer);
-  }, [bankOwned, stores, companies, socialAccounts.length, staff.researchers, researchLabs]);
+  }, [isPaused, bankOwned, stores, companies, socialAccounts.length, staff.researchers, researchLabs, history, factories, hasStreaming, servers, fans, hiredVips, hardware]);
 
   const generateRandomName = (type: string) => {
     const prefixes = ['Super', 'Mega', 'Ultra', 'Cyber', 'Neo', 'Quantum', 'Aero', 'Chrono', 'Star', 'Space', 'Dark', 'Light', 'Magic', 'Mystic', 'Epic', 'Legendary', 'Infinite', 'Virtual', 'Real', 'Pro', 'Max', 'Elite', 'Prime', 'Alpha', 'Omega'];
@@ -518,11 +887,11 @@ export default function App() {
       const randomLetter = letters[Math.floor(Math.random() * letters.length)];
       const randomNumber = Math.floor(Math.random() * 1000);
       name = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${randomLetter}-${randomNumber}`;
-    } else if (['Filme', 'Série', 'Programa de TV', 'Livro', 'Revista', 'Jornal'].includes(type)) {
+    } else if (['Filme', 'Série', 'Programa de TV', 'Emissora de TV', 'Livro', 'Revista', 'Jornal'].includes(type)) {
       const themes = ['Amor', 'Vingança', 'Mistério', 'Segredo', 'Destino', 'Jornada', 'Batalha', 'Guerra', 'Paz', 'Esperança', 'Sombras', 'Luz', 'Tempo', 'Espaço', 'Mente', 'Coração', 'Alma', 'Sangue', 'Fogo', 'Gelo'];
       const articles = ['O', 'A', 'Os', 'As', 'Um', 'Uma'];
       name = `${articles[Math.floor(Math.random() * articles.length)]} ${themes[Math.floor(Math.random() * themes.length)]} de ${prefixes[Math.floor(Math.random() * prefixes.length)]}`;
-    } else if (['Álbum Musical', 'Podcast', 'Programa de Rádio'].includes(type)) {
+    } else if (['Álbum Musical', 'Podcast', 'Programa de Rádio', 'Emissora de Rádio'].includes(type)) {
       const vibes = ['Vibes', 'Sons', 'Batidas', 'Ritmos', 'Melodias', 'Harmonias', 'Vozes', 'Ecos', 'Sussurros', 'Gritos', 'Silêncio', 'Ruído', 'Frequência', 'Onda', 'Pulso'];
       name = `${vibes[Math.floor(Math.random() * vibes.length)]} ${prefixes[Math.floor(Math.random() * prefixes.length)]}`;
     } else if (['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio'].includes(type)) {
@@ -541,20 +910,43 @@ export default function App() {
     
     if (type === 'Álbum Musical') {
       setGenre('Pop');
-    } else if (type === 'Podcast' || type === 'Programa de Rádio') {
+      setAlbumTracks(10);
+      setHasMusicVideos(false);
+    } else if (type === 'Podcast' || type === 'Programa de Rádio' || type === 'Emissora de Rádio') {
       setGenre('Entrevistas');
     } else if (type === 'Livro' || type === 'Revista' || type === 'Jornal') {
       setGenre('Ficção');
+    } else if (type === 'Emissora de TV') {
+      setGenre('Notícias');
     } else {
       setGenre('Ação');
     }
     
+    if (['Emissora de Rádio', 'Podcast', 'Programa de Rádio'].includes(type)) {
+      setTheme('Geral / Variedades');
+    } else if (type === 'Álbum Musical') {
+      setTheme('Festa / Balada');
+    } else if (type === 'Emissora de TV') {
+      setTheme('Entretenimento Geral');
+    } else {
+      setTheme('Contemporâneo');
+    }
+
+    if (['Emissora de Rádio', 'Podcast', 'Programa de Rádio', 'Álbum Musical'].includes(type)) {
+      setVisualStyle('Estéreo (Padrão)');
+    } else if (type === 'Emissora de TV') {
+      setVisualStyle('Padrão (SD)');
+    } else {
+      setVisualStyle('3D Realista');
+    }
     setFocusEngine(50);
     setFocusGameplay(50);
     setFocusStory(50);
     setFocusGraphics(50);
     setFocusAudio(50);
     setFocusPolishing(50);
+    setProductFeatures([]);
+    setSelectedTvNetworks([]);
     setIsProductSelectOpen(false);
     
     if (type === 'Álbum Musical') {
@@ -568,45 +960,53 @@ export default function App() {
     const types = [];
     
     // Software (Default)
-    if (year >= 1970) types.push('Jogo', 'Sistema Operacional');
-    if (year >= 1990) types.push('Site', 'Motor Gráfico');
+    if (year >= 1970) types.push('Jogo', 'Sistema Operacional', 'Software de Edição');
+    if (year >= 1990) types.push('Site', 'Motor Gráfico', 'Navegador Web');
     if (year >= 2000) types.push('Rede Social', 'Jogo Online');
     if (year >= 2005) types.push('Plataforma Digital');
-    if (year >= 2008) types.push('Aplicativo');
-    if (year >= 2010) types.push('Serviço de Streaming');
+    if (year >= 2008) types.push('Aplicativo', 'Aplicativo de Relacionamento');
+    if (year >= 2009) types.push('Criptomoeda');
+    if (year >= 2010) types.push('Serviço de Streaming', 'Plataforma de Streaming', 'Assistente Virtual');
+    if (year >= 2015) types.push('Realidade Virtual', 'Carro Autônomo (Software)');
     if (year >= 2020) types.push('Inteligência Artificial');
+    if (year >= 2021) types.push('Metaverso');
 
     const hasEditora = upgrades.find(u => u.id === 'div_editora')?.level ? upgrades.find(u => u.id === 'div_editora')!.level > 0 : false;
     if (hasEditora) {
-      types.push('Livro', 'Jornal', 'Revista', 'Jogo de Tabuleiro');
+      types.push('Livro', 'Jornal', 'Revista', 'Jogo de Tabuleiro', 'História em Quadrinhos', 'Mangá', 'Livro Didático');
     }
 
     const hasGravadora = upgrades.find(u => u.id === 'div_gravadora')?.level ? upgrades.find(u => u.id === 'div_gravadora')!.level > 0 : false;
     if (hasGravadora) {
-      types.push('Álbum Musical', 'Programa de Rádio');
+      types.push('Álbum Musical', 'Programa de Rádio', 'Emissora de Rádio', 'Trilha Sonora', 'Efeitos Sonoros');
       if (year >= 1990) types.push('Dublagem/Audiobook');
       if (year >= 2005) types.push('Podcast');
     }
 
     const hasCinema = upgrades.find(u => u.id === 'div_cinema')?.level ? upgrades.find(u => u.id === 'div_cinema')!.level > 0 : false;
     if (hasCinema) {
-      types.push('Filme', 'Programa de TV');
-      if (year >= 1960) types.push('Série');
+      types.push('Filme', 'Programa de TV', 'Emissora de TV', 'Documentário', 'Curta-metragem');
+      if (year >= 1960) types.push('Série', 'Animação');
     }
 
     const hasHardware = upgrades.find(u => u.id === 'div_hardware')?.level ? upgrades.find(u => u.id === 'div_hardware')!.level > 0 : false;
     if (hasHardware) {
-      types.push('Brinquedo');
-      if (year >= 1970) types.push('Arcade', 'Console', 'Computador', 'Processador');
+      types.push('Brinquedo', 'Televisão', 'Microfone', 'Fone de Ouvido');
+      if (year >= 1950) types.push('Mainframe');
+      if (year >= 1960) types.push('Calculadora Eletrônica');
+      if (year >= 1970) types.push('Arcade', 'Console', 'Computador', 'Processador', 'Monitor');
       if (year >= 1980) types.push('Console Portátil', 'Placa de Vídeo');
-      if (year >= 1990) types.push('Celular');
-      if (year >= 2010) types.push('Tablet');
-      if (year >= 2015) types.push('Smartwatch', 'Óculos VR');
+      if (year >= 1990) types.push('Celular', 'Câmera Digital');
+      if (year >= 2010) types.push('Tablet', 'Carro Elétrico', 'Drone');
+      if (year >= 2012) types.push('Impressora 3D');
+      if (year >= 2015) types.push('Smartwatch', 'Óculos VR', 'Foguete Espacial');
+      if (year >= 2025) types.push('Robô Doméstico');
+      if (year >= 2030) types.push('Chip Neural');
     }
 
     // Construções
-    if (year >= 1970) types.push('Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica');
-    if (year >= 1980) types.push('Shopping Center', 'Estádio');
+    if (year >= 1970) types.push('Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica', 'Escola', 'Hospital');
+    if (year >= 1980) types.push('Shopping Center', 'Estádio', 'Parque de Diversões', 'Aeroporto', 'Universidade');
 
     return types;
   };
@@ -614,6 +1014,8 @@ export default function App() {
   const getProjectCost = () => {
     let typeCostMultiplier = 1;
     if (productType === 'Console') typeCostMultiplier = 20;
+    else if (productType === 'Mainframe') typeCostMultiplier = 40;
+    else if (productType === 'Calculadora Eletrônica') typeCostMultiplier = 5;
     else if (productType === 'Motor Gráfico') typeCostMultiplier = 5;
     else if (productType === 'Computador') typeCostMultiplier = 15;
     else if (productType === 'Celular') typeCostMultiplier = 10;
@@ -622,6 +1024,7 @@ export default function App() {
     else if (productType === 'Filme') typeCostMultiplier = 12;
     else if (productType === 'Série') typeCostMultiplier = 18;
     else if (productType === 'Programa de TV') typeCostMultiplier = 7;
+    else if (productType === 'Emissora de TV') typeCostMultiplier = 50;
     else if (productType === 'Sistema Operacional') typeCostMultiplier = 25;
     else if (productType === 'Aplicativo') typeCostMultiplier = 3;
     else if (productType === 'Tablet') typeCostMultiplier = 8;
@@ -632,6 +1035,7 @@ export default function App() {
     else if (productType === 'Dublagem/Audiobook') typeCostMultiplier = 2;
     else if (productType === 'Podcast') typeCostMultiplier = 1;
     else if (productType === 'Programa de Rádio') typeCostMultiplier = 2;
+    else if (productType === 'Emissora de Rádio') typeCostMultiplier = 20;
     else if (productType === 'Livro') typeCostMultiplier = 1;
     else if (productType === 'Jornal') typeCostMultiplier = 2;
     else if (productType === 'Revista') typeCostMultiplier = 1.5;
@@ -644,17 +1048,102 @@ export default function App() {
     else if (productType === 'Fábrica') typeCostMultiplier = 80;
     else if (productType === 'Shopping Center') typeCostMultiplier = 150;
     else if (productType === 'Estádio') typeCostMultiplier = 200;
+    else if (productType === 'Carro Elétrico') typeCostMultiplier = 100;
+    else if (productType === 'Robô Doméstico') typeCostMultiplier = 40;
+    else if (productType === 'Chip Neural') typeCostMultiplier = 80;
+    else if (productType === 'Foguete Espacial') typeCostMultiplier = 300;
+    else if (productType === 'Drone') typeCostMultiplier = 12;
+    else if (productType === 'Impressora 3D') typeCostMultiplier = 15;
+    else if (productType === 'Realidade Virtual') typeCostMultiplier = 20;
+    else if (productType === 'Criptomoeda') typeCostMultiplier = 5;
+    else if (productType === 'Metaverso') typeCostMultiplier = 35;
+    else if (productType === 'Carro Autônomo (Software)') typeCostMultiplier = 50;
+    else if (productType === 'Inteligência Artificial') typeCostMultiplier = 40;
+    else if (productType === 'Plataforma de Streaming') typeCostMultiplier = 15;
+    else if (productType === 'Navegador Web') typeCostMultiplier = 8;
+    else if (productType === 'Aplicativo de Relacionamento') typeCostMultiplier = 4;
+    else if (productType === 'Assistente Virtual') typeCostMultiplier = 25;
+    else if (productType === 'Software de Edição') typeCostMultiplier = 12;
+    else if (productType === 'Console Portátil') typeCostMultiplier = 12;
+    else if (productType === 'Câmera Digital') typeCostMultiplier = 8;
+    else if (productType === 'Fone de Ouvido') typeCostMultiplier = 3;
+    else if (productType === 'Microfone') typeCostMultiplier = 2;
+    else if (productType === 'Televisão') typeCostMultiplier = 15;
+    else if (productType === 'Monitor') typeCostMultiplier = 10;
+    else if (productType === 'Documentário') typeCostMultiplier = 5;
+    else if (productType === 'Animação') typeCostMultiplier = 15;
+    else if (productType === 'Curta-metragem') typeCostMultiplier = 2;
+    else if (productType === 'Trilha Sonora') typeCostMultiplier = 3;
+    else if (productType === 'Efeitos Sonoros') typeCostMultiplier = 1;
+    else if (productType === 'História em Quadrinhos') typeCostMultiplier = 1.5;
+    else if (productType === 'Mangá') typeCostMultiplier = 1.5;
+    else if (productType === 'Livro Didático') typeCostMultiplier = 2;
+    else if (productType === 'Parque de Diversões') typeCostMultiplier = 250;
+    else if (productType === 'Aeroporto') typeCostMultiplier = 400;
+    else if (productType === 'Hospital') typeCostMultiplier = 120;
+    else if (productType === 'Escola') typeCostMultiplier = 30;
+    else if (productType === 'Universidade') typeCostMultiplier = 80;
     
     const sizeCostMultiplier = gameSize === 'AAA' ? 10 : gameSize === 'Médio' ? 3 : 1;
-    return (10000 + (staff.devs * 2000) + (staff.designers * 2000) + (staff.testers * 1500)) * sizeCostMultiplier * typeCostMultiplier;
+    let finalCost = (10000 + (staff.devs * 2000) + (staff.designers * 2000) + (staff.testers * 1500)) * sizeCostMultiplier * typeCostMultiplier;
+    
+    if (productType === 'Álbum Musical') {
+      finalCost += (albumTracks * 5000);
+      if (hasMusicVideos) {
+        finalCost += (albumTracks * 15000);
+      }
+    }
+    
+    const featuresCost = productFeatures.reduce((acc, featureId) => {
+      const feature = AVAILABLE_FEATURES.find(f => f.id === featureId);
+      return acc + (feature ? feature.cost : 0);
+    }, 0);
+
+    const marketingCost = marketingCampaigns.reduce((acc, campaignId) => {
+      const campaign = MARKETING_OPTIONS.find(c => c.id === campaignId);
+      return acc + (campaign ? campaign.cost : 0);
+    }, 0);
+
+    let tvNetworksCost = 0;
+    if (productType === 'Programa de TV') {
+      const availableNetworks = [
+        ...DEFAULT_TV_NETWORKS,
+        ...history.filter(g => g.type === 'Emissora de TV').map(n => ({
+          id: `player_${n.id}`,
+          name: n.name,
+          cost: 0,
+          hype: 1.0 + (n.score / 10)
+        }))
+      ];
+      tvNetworksCost = selectedTvNetworks.reduce((acc, netId) => {
+        const net = availableNetworks.find(n => n.id === netId);
+        return acc + (net ? net.cost : 0);
+      }, 0);
+    }
+
+    const baseTotalCost = finalCost + featuresCost + marketingCost + tvNetworksCost;
+    
+    const regionsCostMultiplier = selectedRegions.reduce((acc, regionId) => {
+      const region = REGIONS.find(r => r.id === regionId);
+      return acc + (region ? region.costMultiplier : 0);
+    }, 0);
+
+    return Math.floor(baseTotalCost * (1 + regionsCostMultiplier));
+  };
+
+  const getProjectRPCost = () => {
+    return productFeatures.reduce((acc, featureId) => {
+      const feature = AVAILABLE_FEATURES.find(f => f.id === featureId);
+      return acc + (feature ? feature.rp : 0);
+    }, 0);
   };
 
   const getSlidersForProduct = (type: string) => {
-    const isHardware = ['Console', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Arcade', 'Óculos VR'].includes(type);
-    const isMedia = ['Filme', 'Série', 'Programa de TV'].includes(type);
-    const isAudio = ['Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio'].includes(type);
-    const isPrint = ['Livro', 'Jornal', 'Revista', 'Jogo de Tabuleiro', 'Brinquedo'].includes(type);
-    const isBuilding = ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica', 'Shopping Center', 'Estádio'].includes(type);
+    const isHardware = ['Console', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Arcade', 'Óculos VR', 'Carro Elétrico', 'Robô Doméstico', 'Chip Neural', 'Foguete Espacial', 'Drone', 'Impressora 3D', 'Console Portátil', 'Câmera Digital', 'Fone de Ouvido', 'Microfone', 'Televisão', 'Monitor'].includes(type);
+    const isMedia = ['Filme', 'Série', 'Programa de TV', 'Emissora de TV', 'Documentário', 'Animação', 'Curta-metragem'].includes(type);
+    const isAudio = ['Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio', 'Emissora de Rádio', 'Trilha Sonora', 'Efeitos Sonoros'].includes(type);
+    const isPrint = ['Livro', 'Jornal', 'Revista', 'Jogo de Tabuleiro', 'Brinquedo', 'História em Quadrinhos', 'Mangá', 'Livro Didático'].includes(type);
+    const isBuilding = ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica', 'Shopping Center', 'Estádio', 'Parque de Diversões', 'Aeroporto', 'Hospital', 'Escola', 'Universidade'].includes(type);
     
     if (isHardware) {
       return [
@@ -714,6 +1203,14 @@ export default function App() {
     }
   };
 
+  const toggleFeature = (featureId: string) => {
+    setProductFeatures(prev => 
+      prev.includes(featureId) 
+        ? prev.filter(id => id !== featureId)
+        : [...prev, featureId]
+    );
+  };
+
   const startGame = () => {
     if (!gameName.trim()) {
       setNotification({ message: 'Por favor, dê um nome ao seu projeto!', type: 'error' });
@@ -722,6 +1219,7 @@ export default function App() {
     }
     
     const projectCost = getProjectCost();
+    const projectRPCost = getProjectRPCost();
     
     if (money < projectCost) {
       setNotification({ message: `Dinheiro insuficiente! Custa ${formatMoney(projectCost)} para iniciar este projeto com sua equipe atual.`, type: 'error' });
@@ -729,7 +1227,14 @@ export default function App() {
       return;
     }
 
+    if (researchPoints < projectRPCost) {
+      setNotification({ message: `Pontos de Pesquisa insuficientes! Custa ${projectRPCost} RP para iniciar este projeto com as funções selecionadas.`, type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+
     setMoney(m => m - projectCost);
+    setResearchPoints(rp => rp - projectRPCost);
     setIsSetupOpen(false);
     setProgress(0);
     setDevDesign(0);
@@ -751,7 +1256,7 @@ export default function App() {
 
     if (selectedBandId === null) {
       const newBand = {
-        id: Date.now(),
+        id: Date.now() + Math.random(),
         name: newBandName,
         genre: newBandGenre,
         members: newBandMembers
@@ -780,13 +1285,14 @@ export default function App() {
   };
 
   const testProduct = () => {
-    const isMedia = productType === 'Filme' || productType === 'Série' || productType === 'Programa de TV';
-    const isAudio = productType === 'Álbum Musical' || productType === 'Dublagem/Audiobook' || productType === 'Podcast' || productType === 'Programa de Rádio';
-    const isPrint = productType === 'Livro' || productType === 'Jornal' || productType === 'Revista';
-    const isPhysical = productType === 'Jogo de Tabuleiro' || productType === 'Brinquedo' || productType === 'Arcade';
+    const isMedia = ['Filme', 'Série', 'Programa de TV', 'Emissora de TV', 'Documentário', 'Animação', 'Curta-metragem'].includes(productType);
+    const isAudio = ['Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio', 'Emissora de Rádio', 'Trilha Sonora', 'Efeitos Sonoros'].includes(productType);
+    const isPrint = ['Livro', 'Jornal', 'Revista', 'História em Quadrinhos', 'Mangá', 'Livro Didático'].includes(productType);
+    const isPhysical = ['Jogo de Tabuleiro', 'Brinquedo', 'Arcade', 'Carro Elétrico', 'Robô Doméstico', 'Chip Neural', 'Foguete Espacial', 'Drone', 'Impressora 3D', 'Console', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Mainframe', 'Calculadora Eletrônica', 'Console Portátil', 'Óculos VR', 'Câmera Digital', 'Fone de Ouvido', 'Microfone', 'Televisão', 'Monitor'].includes(productType);
+    const isBuilding = ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Fábrica', 'Shopping Center', 'Estádio', 'Parque de Diversões', 'Aeroporto', 'Hospital', 'Escola', 'Universidade'].includes(productType);
     
-    const roleName = isMedia ? 'Editores/Revisores' : isAudio ? 'Engenheiros de Áudio' : isPrint ? 'Revisores de Texto' : isPhysical ? 'Analistas de Qualidade' : 'Testers (QA)';
-    const bugName = isMedia ? 'erros de gravação' : isAudio ? 'ruídos/falhas' : isPrint ? 'erros de digitação' : isPhysical ? 'defeitos de fábrica' : 'bugs';
+    const roleName = isMedia ? 'Editores/Revisores' : isAudio ? 'Engenheiros de Áudio' : isPrint ? 'Revisores de Texto' : isPhysical ? 'Analistas de Qualidade' : isBuilding ? 'Engenheiros/Fiscais' : 'Testers (QA)';
+    const bugName = isMedia ? 'erros de gravação' : isAudio ? 'ruídos/falhas' : isPrint ? 'erros de digitação' : isPhysical ? 'defeitos de fábrica' : isBuilding ? 'falhas estruturais' : 'bugs';
 
     if (staff.testers === 0) {
       setNotification({ message: `Você precisa contratar ${roleName} na aba de RH para revisar produtos durante o desenvolvimento!`, type: 'error' });
@@ -820,6 +1326,8 @@ export default function App() {
     // Divisor aumenta levemente com a equipe para não quebrar a nota 10 instantaneamente
     let typeDifficultyMultiplier = 1;
     if (productType === 'Console') typeDifficultyMultiplier = 5;
+    else if (productType === 'Mainframe') typeDifficultyMultiplier = 6;
+    else if (productType === 'Calculadora Eletrônica') typeDifficultyMultiplier = 2;
     else if (productType === 'Motor Gráfico') typeDifficultyMultiplier = 3;
     else if (productType === 'Computador') typeDifficultyMultiplier = 4;
     else if (productType === 'Celular') typeDifficultyMultiplier = 3.5;
@@ -850,6 +1358,41 @@ export default function App() {
     else if (productType === 'Fábrica') typeDifficultyMultiplier = 5.0;
     else if (productType === 'Shopping Center') typeDifficultyMultiplier = 6.0;
     else if (productType === 'Estádio') typeDifficultyMultiplier = 8.0;
+    else if (productType === 'Carro Elétrico') typeDifficultyMultiplier = 6.5;
+    else if (productType === 'Robô Doméstico') typeDifficultyMultiplier = 5.5;
+    else if (productType === 'Chip Neural') typeDifficultyMultiplier = 7.0;
+    else if (productType === 'Foguete Espacial') typeDifficultyMultiplier = 10.0;
+    else if (productType === 'Drone') typeDifficultyMultiplier = 3.5;
+    else if (productType === 'Impressora 3D') typeDifficultyMultiplier = 4.0;
+    else if (productType === 'Realidade Virtual') typeDifficultyMultiplier = 4.5;
+    else if (productType === 'Criptomoeda') typeDifficultyMultiplier = 3.0;
+    else if (productType === 'Metaverso') typeDifficultyMultiplier = 6.0;
+    else if (productType === 'Carro Autônomo (Software)') typeDifficultyMultiplier = 7.5;
+    else if (productType === 'Inteligência Artificial') typeDifficultyMultiplier = 5.0;
+    else if (productType === 'Plataforma de Streaming') typeDifficultyMultiplier = 3.5;
+    else if (productType === 'Navegador Web') typeDifficultyMultiplier = 3.0;
+    else if (productType === 'Aplicativo de Relacionamento') typeDifficultyMultiplier = 2.0;
+    else if (productType === 'Assistente Virtual') typeDifficultyMultiplier = 4.5;
+    else if (productType === 'Software de Edição') typeDifficultyMultiplier = 3.5;
+    else if (productType === 'Console Portátil') typeDifficultyMultiplier = 4.0;
+    else if (productType === 'Câmera Digital') typeDifficultyMultiplier = 3.0;
+    else if (productType === 'Fone de Ouvido') typeDifficultyMultiplier = 2.0;
+    else if (productType === 'Microfone') typeDifficultyMultiplier = 1.5;
+    else if (productType === 'Televisão') typeDifficultyMultiplier = 3.5;
+    else if (productType === 'Monitor') typeDifficultyMultiplier = 3.0;
+    else if (productType === 'Documentário') typeDifficultyMultiplier = 2.5;
+    else if (productType === 'Animação') typeDifficultyMultiplier = 4.0;
+    else if (productType === 'Curta-metragem') typeDifficultyMultiplier = 1.5;
+    else if (productType === 'Trilha Sonora') typeDifficultyMultiplier = 2.0;
+    else if (productType === 'Efeitos Sonoros') typeDifficultyMultiplier = 1.0;
+    else if (productType === 'História em Quadrinhos') typeDifficultyMultiplier = 1.5;
+    else if (productType === 'Mangá') typeDifficultyMultiplier = 1.8;
+    else if (productType === 'Livro Didático') typeDifficultyMultiplier = 2.0;
+    else if (productType === 'Parque de Diversões') typeDifficultyMultiplier = 7.0;
+    else if (productType === 'Aeroporto') typeDifficultyMultiplier = 9.0;
+    else if (productType === 'Hospital') typeDifficultyMultiplier = 6.5;
+    else if (productType === 'Escola') typeDifficultyMultiplier = 3.5;
+    else if (productType === 'Universidade') typeDifficultyMultiplier = 5.0;
 
     const sizeDifficultyMultiplier = gameSize === 'AAA' ? 3 : gameSize === 'Médio' ? 1.5 : 1;
     const difficultyDivisor = (40 + (staff.devs + staff.designers) * 5) * sizeDifficultyMultiplier * typeDifficultyMultiplier;
@@ -857,6 +1400,17 @@ export default function App() {
     
     scoreBase += (Math.random() * 2 - 1); // Fator sorte
     
+    // Apply VIP boosts
+    const vipBoost = hiredVips.reduce((acc, vip) => acc + vip.boost, 0);
+    scoreBase += vipBoost;
+
+    // Apply feature boosts
+    const featureBoost = productFeatures.reduce((acc, featureId) => {
+      const feature = AVAILABLE_FEATURES.find(f => f.id === featureId);
+      return acc + (feature ? feature.boost : 0);
+    }, 0);
+    scoreBase += featureBoost;
+
     let finalScore = Math.max(1, Math.min(10, scoreBase));
     finalScore = Math.round(finalScore * 10) / 10;
 
@@ -865,6 +1419,8 @@ export default function App() {
     
     let typeSalesMultiplier = 1;
     if (productType === 'Console') typeSalesMultiplier = 0.5;
+    else if (productType === 'Mainframe') typeSalesMultiplier = 0.05;
+    else if (productType === 'Calculadora Eletrônica') typeSalesMultiplier = 0.3;
     else if (productType === 'Motor Gráfico') typeSalesMultiplier = 0.2;
     else if (productType === 'Computador') typeSalesMultiplier = 0.4;
     else if (productType === 'Celular') typeSalesMultiplier = 0.6;
@@ -873,6 +1429,7 @@ export default function App() {
     else if (productType === 'Filme') typeSalesMultiplier = 1.5;
     else if (productType === 'Série') typeSalesMultiplier = 1.2;
     else if (productType === 'Programa de TV') typeSalesMultiplier = 0.9;
+    else if (productType === 'Emissora de TV') typeSalesMultiplier = 0.5;
     else if (productType === 'Sistema Operacional') typeSalesMultiplier = 1.8;
     else if (productType === 'Aplicativo') typeSalesMultiplier = 2.5;
     else if (productType === 'Tablet') typeSalesMultiplier = 0.7;
@@ -883,6 +1440,7 @@ export default function App() {
     else if (productType === 'Dublagem/Audiobook') typeSalesMultiplier = 1.0;
     else if (productType === 'Podcast') typeSalesMultiplier = 2.2;
     else if (productType === 'Programa de Rádio') typeSalesMultiplier = 1.5;
+    else if (productType === 'Emissora de Rádio') typeSalesMultiplier = 0.8;
     else if (productType === 'Livro') typeSalesMultiplier = 1.2;
     else if (productType === 'Jornal') typeSalesMultiplier = 1.8;
     else if (productType === 'Revista') typeSalesMultiplier = 1.4;
@@ -895,14 +1453,90 @@ export default function App() {
     else if (productType === 'Fábrica') typeSalesMultiplier = 0.005;
     else if (productType === 'Shopping Center') typeSalesMultiplier = 0.002;
     else if (productType === 'Estádio') typeSalesMultiplier = 0.001;
+    else if (productType === 'Carro Elétrico') typeSalesMultiplier = 0.05;
+    else if (productType === 'Robô Doméstico') typeSalesMultiplier = 0.1;
+    else if (productType === 'Chip Neural') typeSalesMultiplier = 0.08;
+    else if (productType === 'Foguete Espacial') typeSalesMultiplier = 0.0005;
+    else if (productType === 'Drone') typeSalesMultiplier = 0.5;
+    else if (productType === 'Impressora 3D') typeSalesMultiplier = 0.3;
+    else if (productType === 'Realidade Virtual') typeSalesMultiplier = 0.8;
+    else if (productType === 'Criptomoeda') typeSalesMultiplier = 3.0;
+    else if (productType === 'Metaverso') typeSalesMultiplier = 1.5;
+    else if (productType === 'Carro Autônomo (Software)') typeSalesMultiplier = 0.2;
+    else if (productType === 'Inteligência Artificial') typeSalesMultiplier = 2.0;
+    else if (productType === 'Plataforma de Streaming') typeSalesMultiplier = 1.8;
+    else if (productType === 'Navegador Web') typeSalesMultiplier = 2.5;
+    else if (productType === 'Aplicativo de Relacionamento') typeSalesMultiplier = 2.2;
+    else if (productType === 'Assistente Virtual') typeSalesMultiplier = 1.5;
+    else if (productType === 'Software de Edição') typeSalesMultiplier = 0.8;
+    else if (productType === 'Console Portátil') typeSalesMultiplier = 0.6;
+    else if (productType === 'Câmera Digital') typeSalesMultiplier = 0.5;
+    else if (productType === 'Fone de Ouvido') typeSalesMultiplier = 1.2;
+    else if (productType === 'Microfone') typeSalesMultiplier = 0.9;
+    else if (productType === 'Televisão') typeSalesMultiplier = 0.4;
+    else if (productType === 'Monitor') typeSalesMultiplier = 0.5;
+    else if (productType === 'Documentário') typeSalesMultiplier = 0.8;
+    else if (productType === 'Animação') typeSalesMultiplier = 1.6;
+    else if (productType === 'Curta-metragem') typeSalesMultiplier = 0.5;
+    else if (productType === 'Trilha Sonora') typeSalesMultiplier = 1.2;
+    else if (productType === 'Efeitos Sonoros') typeSalesMultiplier = 0.6;
+    else if (productType === 'História em Quadrinhos') typeSalesMultiplier = 1.5;
+    else if (productType === 'Mangá') typeSalesMultiplier = 1.8;
+    else if (productType === 'Livro Didático') typeSalesMultiplier = 0.8;
+    else if (productType === 'Parque de Diversões') typeSalesMultiplier = 0.005;
+    else if (productType === 'Aeroporto') typeSalesMultiplier = 0.001;
+    else if (productType === 'Hospital') typeSalesMultiplier = 0.002;
+    else if (productType === 'Escola') typeSalesMultiplier = 0.01;
+    else if (productType === 'Universidade') typeSalesMultiplier = 0.005;
 
     const sizeSalesMultiplier = gameSize === 'AAA' ? 5 : gameSize === 'Médio' ? 2 : 1;
-    const totalSales = Math.floor((baseSales * scoreMultiplier) + (totalPoints * 2)) * sizeSalesMultiplier * typeSalesMultiplier;
+    
+    const marketingHype = marketingCampaigns.reduce((acc, campaignId) => {
+      const campaign = MARKETING_OPTIONS.find(c => c.id === campaignId);
+      return acc * (campaign ? campaign.hype : 1);
+    }, 1.0);
+
+    let tvNetworkHype = 1.0;
+    if (productType === 'Programa de TV') {
+      const availableNetworks = [
+        ...DEFAULT_TV_NETWORKS,
+        ...history.filter(g => g.type === 'Emissora de TV').map(n => ({
+          id: `player_${n.id}`,
+          name: n.name,
+          cost: 0,
+          hype: 1.0 + (n.score / 10)
+        }))
+      ];
+      tvNetworkHype = selectedTvNetworks.reduce((acc, netId) => {
+        const net = availableNetworks.find(n => n.id === netId);
+        return acc * (net ? net.hype : 1);
+      }, 1.0);
+    }
+
+    const regionSalesMultiplier = selectedRegions.reduce((acc, regionId) => {
+      const region = REGIONS.find(r => r.id === regionId);
+      return acc + (region ? region.salesMultiplier : 0);
+    }, 0);
+
+    let trendMultiplier = 1.0;
+    if (currentTrend) {
+      if (currentTrend.type === 'genre' && currentTrend.name === genre) {
+        trendMultiplier = currentTrend.multiplier;
+      } else if (currentTrend.type === 'theme' && currentTrend.name === theme) {
+        trendMultiplier = currentTrend.multiplier;
+      }
+    }
+
+    const totalSales = Math.floor((baseSales * scoreMultiplier) + (totalPoints * 2)) * sizeSalesMultiplier * typeSalesMultiplier * hypeMultiplier * marketingHype * tvNetworkHype * Math.max(1, regionSalesMultiplier) * trendMultiplier;
     
     // Preço de venda baseado no tamanho
     let gamePrice = 0;
     if (productType === 'Console') {
       gamePrice = gameSize === 'AAA' ? 500 : gameSize === 'Médio' ? 400 : 300;
+    } else if (productType === 'Mainframe') {
+      gamePrice = gameSize === 'AAA' ? 500000 : gameSize === 'Médio' ? 250000 : 100000;
+    } else if (productType === 'Calculadora Eletrônica') {
+      gamePrice = gameSize === 'AAA' ? 200 : gameSize === 'Médio' ? 100 : 50;
     } else if (productType === 'Motor Gráfico') {
       gamePrice = gameSize === 'AAA' ? 500 : gameSize === 'Médio' ? 250 : 150;
     } else if (productType === 'Computador') {
@@ -919,6 +1553,8 @@ export default function App() {
       gamePrice = gameSize === 'AAA' ? 100 : gameSize === 'Médio' ? 60 : 30;
     } else if (productType === 'Programa de TV') {
       gamePrice = gameSize === 'AAA' ? 50 : gameSize === 'Médio' ? 30 : 15;
+    } else if (productType === 'Emissora de TV') {
+      gamePrice = gameSize === 'AAA' ? 10000 : gameSize === 'Médio' ? 5000 : 2000;
     } else if (productType === 'Sistema Operacional') {
       gamePrice = gameSize === 'AAA' ? 200 : gameSize === 'Médio' ? 100 : 50;
     } else if (productType === 'Aplicativo') {
@@ -939,6 +1575,8 @@ export default function App() {
       gamePrice = gameSize === 'AAA' ? 5 : gameSize === 'Médio' ? 2 : 0;
     } else if (productType === 'Programa de Rádio') {
       gamePrice = gameSize === 'AAA' ? 20 : gameSize === 'Médio' ? 10 : 5;
+    } else if (productType === 'Emissora de Rádio') {
+      gamePrice = gameSize === 'AAA' ? 5000 : gameSize === 'Médio' ? 2500 : 1000;
     } else if (productType === 'Livro') {
       gamePrice = gameSize === 'AAA' ? 80 : gameSize === 'Médio' ? 50 : 30;
     } else if (productType === 'Jornal') {
@@ -963,6 +1601,76 @@ export default function App() {
       gamePrice = gameSize === 'AAA' ? 150000000 : gameSize === 'Médio' ? 80000000 : 30000000;
     } else if (productType === 'Estádio') {
       gamePrice = gameSize === 'AAA' ? 500000000 : gameSize === 'Médio' ? 200000000 : 80000000;
+    } else if (productType === 'Carro Elétrico') {
+      gamePrice = gameSize === 'AAA' ? 150000 : gameSize === 'Médio' ? 80000 : 40000;
+    } else if (productType === 'Robô Doméstico') {
+      gamePrice = gameSize === 'AAA' ? 50000 : gameSize === 'Médio' ? 20000 : 8000;
+    } else if (productType === 'Chip Neural') {
+      gamePrice = gameSize === 'AAA' ? 100000 : gameSize === 'Médio' ? 50000 : 20000;
+    } else if (productType === 'Foguete Espacial') {
+      gamePrice = gameSize === 'AAA' ? 1000000000 : gameSize === 'Médio' ? 500000000 : 200000000;
+    } else if (productType === 'Drone') {
+      gamePrice = gameSize === 'AAA' ? 5000 : gameSize === 'Médio' ? 2000 : 800;
+    } else if (productType === 'Impressora 3D') {
+      gamePrice = gameSize === 'AAA' ? 10000 : gameSize === 'Médio' ? 4000 : 1500;
+    } else if (productType === 'Realidade Virtual') {
+      gamePrice = gameSize === 'AAA' ? 150 : gameSize === 'Médio' ? 80 : 40;
+    } else if (productType === 'Criptomoeda') {
+      gamePrice = gameSize === 'AAA' ? 5000 : gameSize === 'Médio' ? 2000 : 500;
+    } else if (productType === 'Metaverso') {
+      gamePrice = gameSize === 'AAA' ? 1000 : gameSize === 'Médio' ? 500 : 200;
+    } else if (productType === 'Carro Autônomo (Software)') {
+      gamePrice = gameSize === 'AAA' ? 15000 : gameSize === 'Médio' ? 8000 : 4000;
+    } else if (productType === 'Inteligência Artificial') {
+      gamePrice = gameSize === 'AAA' ? 5000 : gameSize === 'Médio' ? 2000 : 800;
+    } else if (productType === 'Plataforma de Streaming') {
+      gamePrice = gameSize === 'AAA' ? 50 : gameSize === 'Médio' ? 30 : 15;
+    } else if (productType === 'Navegador Web') {
+      gamePrice = gameSize === 'AAA' ? 0 : gameSize === 'Médio' ? 0 : 0; // Usually free, monetized via ads/data
+    } else if (productType === 'Aplicativo de Relacionamento') {
+      gamePrice = gameSize === 'AAA' ? 30 : gameSize === 'Médio' ? 15 : 5; // Premium subscriptions
+    } else if (productType === 'Assistente Virtual') {
+      gamePrice = gameSize === 'AAA' ? 200 : gameSize === 'Médio' ? 100 : 50;
+    } else if (productType === 'Software de Edição') {
+      gamePrice = gameSize === 'AAA' ? 300 : gameSize === 'Médio' ? 150 : 80;
+    } else if (productType === 'Console Portátil') {
+      gamePrice = gameSize === 'AAA' ? 350 : gameSize === 'Médio' ? 200 : 100;
+    } else if (productType === 'Câmera Digital') {
+      gamePrice = gameSize === 'AAA' ? 1200 : gameSize === 'Médio' ? 600 : 300;
+    } else if (productType === 'Fone de Ouvido') {
+      gamePrice = gameSize === 'AAA' ? 300 : gameSize === 'Médio' ? 150 : 50;
+    } else if (productType === 'Microfone') {
+      gamePrice = gameSize === 'AAA' ? 250 : gameSize === 'Médio' ? 100 : 40;
+    } else if (productType === 'Televisão') {
+      gamePrice = gameSize === 'AAA' ? 2000 : gameSize === 'Médio' ? 1000 : 500;
+    } else if (productType === 'Monitor') {
+      gamePrice = gameSize === 'AAA' ? 800 : gameSize === 'Médio' ? 400 : 200;
+    } else if (productType === 'Documentário') {
+      gamePrice = gameSize === 'AAA' ? 20 : gameSize === 'Médio' ? 15 : 10;
+    } else if (productType === 'Animação') {
+      gamePrice = gameSize === 'AAA' ? 25 : gameSize === 'Médio' ? 15 : 10;
+    } else if (productType === 'Curta-metragem') {
+      gamePrice = gameSize === 'AAA' ? 10 : gameSize === 'Médio' ? 5 : 2;
+    } else if (productType === 'Trilha Sonora') {
+      gamePrice = gameSize === 'AAA' ? 20 : gameSize === 'Médio' ? 15 : 10;
+    } else if (productType === 'Efeitos Sonoros') {
+      gamePrice = gameSize === 'AAA' ? 50 : gameSize === 'Médio' ? 25 : 10;
+    } else if (productType === 'História em Quadrinhos') {
+      gamePrice = gameSize === 'AAA' ? 20 : gameSize === 'Médio' ? 10 : 5;
+    } else if (productType === 'Mangá') {
+      gamePrice = gameSize === 'AAA' ? 15 : gameSize === 'Médio' ? 8 : 4;
+    } else if (productType === 'Livro Didático') {
+      gamePrice = gameSize === 'AAA' ? 100 : gameSize === 'Médio' ? 60 : 30;
+    } else if (productType === 'Parque de Diversões') {
+      gamePrice = gameSize === 'AAA' ? 500000000 : gameSize === 'Médio' ? 200000000 : 80000000;
+    } else if (productType === 'Aeroporto') {
+      gamePrice = gameSize === 'AAA' ? 2000000000 : gameSize === 'Médio' ? 800000000 : 300000000;
+    } else if (productType === 'Hospital') {
+      gamePrice = gameSize === 'AAA' ? 300000000 : gameSize === 'Médio' ? 100000000 : 40000000;
+    } else if (productType === 'Escola') {
+      gamePrice = gameSize === 'AAA' ? 50000000 : gameSize === 'Médio' ? 20000000 : 5000000;
+    } else if (productType === 'Universidade') {
+      gamePrice = gameSize === 'AAA' ? 200000000 : gameSize === 'Médio' ? 80000000 : 30000000;
     } else {
       gamePrice = gameSize === 'AAA' ? 60 : gameSize === 'Médio' ? 40 : 20;
     }
@@ -970,11 +1678,22 @@ export default function App() {
     const fansGained = Math.floor(totalSales * 0.08 * (finalScore / 5));
 
     const newGame: Game = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       name: gameName,
       type: productType,
-      genre: (productType === 'Jogo' || productType === 'Filme' || productType === 'Série' || productType === 'Programa de TV' || productType === 'Aplicativo' || productType === 'Sistema Operacional' || productType === 'Álbum Musical' || productType === 'Podcast') ? genre : '-',
-      platform: (productType === 'Jogo' || productType === 'Aplicativo' || productType === 'Sistema Operacional' || productType === 'Álbum Musical' || productType === 'Podcast') ? platform : '-',
+      genre: genre || '-',
+      platform: platform || '-',
+      theme: theme || undefined,
+      visualStyle: visualStyle || undefined,
+      targetAudience: targetAudience || undefined,
+      marketingCampaigns: marketingCampaigns.length > 0 ? marketingCampaigns : undefined,
+      tvNetworks: productType === 'Programa de TV' && selectedTvNetworks.length > 0 ? selectedTvNetworks : undefined,
+      regions: selectedRegions,
+      isSubscription: SUBSCRIPTION_TYPES.includes(productType),
+      isActive: SUBSCRIPTION_TYPES.includes(productType),
+      activeSubscribers: SUBSCRIPTION_TYPES.includes(productType) ? totalSales : undefined,
+      monthlyFee: SUBSCRIPTION_TYPES.includes(productType) ? Math.max(5, Math.floor(gamePrice / 10)) : undefined,
+      maintenanceCost: SUBSCRIPTION_TYPES.includes(productType) ? 1 : undefined,
       design: devDesign,
       tech: devTech,
       bugs: devBugs,
@@ -988,9 +1707,69 @@ export default function App() {
     setMoney(m => m + revenue);
     setFans(f => Math.max(0, f + fansGained));
     
+    // Gera comentários iniciais nas redes sociais ao lançar um produto
+    if (socialAccounts.length > 0) {
+      const initialCommentsCount = Math.floor(Math.random() * 5) + 3;
+      const newComments = [];
+      const authors = ['João Silva', 'Maria Oliveira', 'Pedro Santos', 'Ana Costa', 'Lucas Pereira', 'Juliana Lima', 'Marcos Rocha', 'Fernanda Souza', 'Rafael Alves', 'Camila Martins'];
+      const launchComments = [
+        'Acabou de sair! Já estou baixando.',
+        'Finalmente! Esperei muito por isso.',
+        'Parece incrível, vou testar agora.',
+        'O trailer me convenceu, espero que seja bom.',
+        'Alguém já testou? Vale a pena?',
+        'Mais um lançamento de peso!',
+        'A arte está linda, parabéns!',
+        'Espero que não tenha muitos bugs.',
+        'O hype é real!',
+        'Vou maratonar isso hoje mesmo.'
+      ];
+
+      for (let i = 0; i < initialCommentsCount; i++) {
+        const randomAccount = socialAccounts[Math.floor(Math.random() * socialAccounts.length)];
+        const sentiment: 'positive' | 'negative' | 'neutral' = finalScore > 7 ? 'positive' : finalScore < 4 ? 'negative' : 'neutral';
+        
+        let content = '';
+        if (sentiment === 'positive') {
+          content = launchComments[Math.floor(Math.random() * launchComments.length)];
+        } else if (sentiment === 'negative') {
+          content = 'Esperava mais desse lançamento, achei meio fraco.';
+        } else {
+          content = 'Interessante, vou dar uma olhada com calma.';
+        }
+
+        newComments.push({
+          id: Date.now() + i + Math.random(),
+          author: authors[Math.floor(Math.random() * authors.length)],
+          content: `[${gameName}] ${content}`,
+          platform: randomAccount.platform,
+          date: new Date(gameDate),
+          sentiment
+        });
+      }
+      setSocialComments(prev => [...newComments, ...prev].slice(0, 50));
+    }
+    
     // Ganha pontos de pesquisa ao finalizar um produto
     const gainedRP = Math.floor((finalScore * 100) * (gameSize === 'AAA' ? 3 : gameSize === 'Médio' ? 1.5 : 1));
     setResearchPoints(p => p + gainedRP);
+
+    // Market Share Gain
+    const marketShareGain = (finalScore / 10) * (gameSize === 'AAA' ? 2.0 : gameSize === 'Médio' ? 0.5 : 0.1);
+    setPlayerMarketShare(prevPlayerShare => {
+      const newPlayerShare = Math.min(100, prevPlayerShare + marketShareGain);
+      const targetRivalShare = 100 - newPlayerShare;
+
+      setRivals(currentRivals => {
+        const totalRivalShare = currentRivals.reduce((acc, r) => acc + r.marketShare, 0);
+        return currentRivals.map(r => ({
+          ...r,
+          marketShare: (r.marketShare / totalRivalShare) * targetRivalShare
+        }));
+      });
+
+      return newPlayerShare;
+    });
 
     setIsReviewOpen(true);
   };
@@ -1013,6 +1792,30 @@ export default function App() {
     }
     setMoney(m => m - cost);
     setFans(f => f + fansGained);
+  };
+
+  const organizeShow = (bandId: number, type: 'local' | 'mundial') => {
+    const cost = type === 'local' ? 30000 : 150000;
+    if (money < cost) {
+      setNotification({ message: 'Dinheiro insuficiente para organizar este show/turnê!', type: 'error' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    
+    const band = bands.find(b => b.id === bandId);
+    if (!band) return;
+
+    const fansGained = type === 'local' ? Math.floor(Math.random() * 2000) + 500 : Math.floor(Math.random() * 15000) + 5000;
+    const revenue = type === 'local' ? Math.floor(Math.random() * 50000) + 20000 : Math.floor(Math.random() * 500000) + 200000;
+    
+    setMoney(m => m - cost + revenue);
+    setFans(f => f + fansGained);
+    
+    setNotification({ 
+      message: `${band.name} finalizou a ${type === 'local' ? 'apresentação local' : 'turnê mundial'}! Lucro: ${formatMoney(revenue - cost)}. Fãs ganhos: ${formatNumber(fansGained)}.`, 
+      type: 'success' 
+    });
+    setTimeout(() => setNotification(null), 5000);
   };
 
   const formatMoney = (val: number) => {
@@ -1375,25 +2178,14 @@ export default function App() {
 
           {/* Date */}
           <div className="flex-1 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
-            <div className="w-8 h-8 bg-amber-500/20 rounded-full flex items-center justify-center border border-amber-500/30">
-              <Calendar className="w-4 h-4 text-amber-400" />
-            </div>
+            <button 
+              onClick={() => setIsPaused(!isPaused)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all ${isPaused ? 'bg-emerald-500/20 border-emerald-500/30' : 'bg-amber-500/20 border-amber-500/30'}`}
+            >
+              {isPaused ? <Play className="w-4 h-4 text-emerald-400" /> : <Pause className="w-4 h-4 text-amber-400" />}
+            </button>
             <span className="text-white font-bold text-sm sm:text-base tracking-tight">{gameDate.toLocaleDateString('pt-BR')}</span>
           </div>
-
-          {/* News Button */}
-          <button 
-            onClick={() => {
-              setIsNewsOpen(true);
-              setNews(n => n.map(item => ({ ...item, read: true })));
-            }}
-            className="relative flex-shrink-0 w-12 h-12 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors"
-          >
-            <Globe className="w-5 h-5 text-blue-400" />
-            {news.some(n => !n.read) && (
-              <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-950 animate-pulse"></span>
-            )}
-          </button>
 
           {/* Search Button */}
           <button 
@@ -1656,6 +2448,7 @@ export default function App() {
         )}
         {/* TAB: HR */}
         {activeTab === 'hr' && (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm">
               <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -1721,6 +2514,72 @@ export default function App() {
               </button>
             </div>
           </div>
+
+          <div className="mt-12">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3 mb-6">
+              <Star className="w-6 h-6 text-amber-400" /> Mega-Estrelas (VIPs)
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {AVAILABLE_VIPS.map(vip => {
+                const isHired = hiredVips.some(v => v.id === vip.id);
+                return (
+                  <div key={vip.id} className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm relative overflow-hidden">
+                    {isHired && (
+                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                        Contratado
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">{vip.name}</h3>
+                        <p className="text-sm text-slate-400">{vip.role}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center">
+                        <Star className={`w-6 h-6 ${isHired ? 'text-amber-400' : 'text-slate-600'}`} />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 mb-6">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Salário Mensal</span>
+                        <span className="font-bold text-red-400">-{formatMoney(vip.salary)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Bônus de Qualidade</span>
+                        <span className="font-bold text-emerald-400">+{vip.boost * 100}%</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (isHired) {
+                          setHiredVips(prev => prev.filter(v => v.id !== vip.id));
+                          setNotification({ message: `${vip.name} foi demitido.`, type: 'info' });
+                        } else {
+                          if (money >= vip.salary) {
+                            setMoney(m => m - vip.salary);
+                            setHiredVips(prev => [...prev, vip]);
+                            setNotification({ message: `${vip.name} foi contratado!`, type: 'success' });
+                          } else {
+                            setNotification({ message: 'Dinheiro insuficiente para o primeiro salário.', type: 'error' });
+                          }
+                        }
+                        setTimeout(() => setNotification(null), 3000);
+                      }}
+                      className={`w-full py-3 font-bold rounded-xl transition-all uppercase text-sm ${
+                        isHired 
+                          ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20' 
+                          : 'bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-lg shadow-amber-500/20'
+                      }`}
+                    >
+                      {isHired ? 'Demitir' : 'Contratar'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          </>
         )}
 
         {/* TAB: RESEARCH */}
@@ -1832,55 +2691,243 @@ export default function App() {
               </button>
             </div>
 
-            <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm md:col-span-3">
-              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-cyan-400" /> Redes Sociais
-              </h2>
-              
-              {socialAccounts.length === 0 ? (
-                <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center mb-6">
-                  <p className="text-slate-400 mb-2">Você ainda não possui contas em redes sociais.</p>
-                  <p className="text-sm text-slate-500 mt-2">Crie contas para engajar com o público e ganhar fãs organicamente.</p>
+            {gameDate.getFullYear() >= 2004 && (
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm md:col-span-3">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Share2 className="w-5 h-5 text-cyan-400" /> Redes Sociais
+                  </h2>
+                  
+                  {socialAccounts.length > 0 && (
+                    <div className="flex items-center gap-3 bg-slate-950 p-2 rounded-xl border border-slate-800">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Comentaristas Contratados</span>
+                        <span className="text-white font-bold text-sm">{commentators} profissionais</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const cost = 50000;
+                          if (money < cost) {
+                            setNotification({ message: 'Dinheiro insuficiente para contratar!', type: 'error' });
+                            setTimeout(() => setNotification(null), 3000);
+                            return;
+                          }
+                          setMoney(m => m - cost);
+                          setCommentators(c => c + 1);
+                          setNotification({ message: 'Comentarista contratado com sucesso!', type: 'success' });
+                          setTimeout(() => setNotification(null), 3000);
+                        }}
+                        className="p-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-all"
+                        title="Contratar Comentarista ($50.000 + $2.000/mês)"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  {socialAccounts.map((account, index) => (
-                    <div key={index} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
-                      <span className="font-bold text-white">{account.platform}</span>
-                      <span className="text-cyan-400 font-bold">{formatNumber(account.followers)} fãs</span>
+                
+                {socialAccounts.length === 0 ? (
+                  <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center mb-6">
+                    <p className="text-slate-400 mb-2">Você ainda não possui contas em redes sociais.</p>
+                    <p className="text-sm text-slate-500 mt-2">Crie contas para engajar com o público e ganhar fãs organicamente.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-1 space-y-4">
+                      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Suas Contas</h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        {socialAccounts.map((account, index) => (
+                          <div key={index} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center group hover:border-cyan-500/50 transition-all">
+                            <span className="font-bold text-white">{account.platform}</span>
+                            <span className="text-cyan-400 font-bold">{formatNumber(account.followers)} fãs</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <button 
+                        onClick={() => {
+                          const year = gameDate.getFullYear();
+                          const allPlatforms = [
+                            { name: 'Orkut', year: 2004 },
+                            { name: 'Facebook', year: 2004 },
+                            { name: 'Twitter', year: 2006 },
+                            { name: 'Instagram', year: 2010 },
+                            { name: 'TikTok', year: 2016 }
+                          ];
+                          
+                          const availablePlatforms = allPlatforms
+                            .filter(p => year >= p.year && !socialAccounts.find(sa => sa.platform === p.name))
+                            .map(p => p.name);
+                          
+                          if (availablePlatforms.length === 0) {
+                            setNotification({ message: 'Não há novas redes sociais disponíveis no momento!', type: 'info' });
+                            setTimeout(() => setNotification(null), 3000);
+                            return;
+                          }
+
+                          setPromptModal({
+                            isOpen: true,
+                            title: 'Criar Conta',
+                            message: 'Em qual rede social você deseja criar uma conta?',
+                            options: availablePlatforms,
+                            onConfirm: (platform) => {
+                              setSocialAccounts(s => [...s, { platform, followers: 0 }]);
+                              setNotification({ message: `Conta criada no ${platform} com sucesso!`, type: 'success' });
+                              setTimeout(() => setNotification(null), 3000);
+                            },
+                            onCancel: () => {}
+                          });
+                        }}
+                        className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 text-sm"
+                      >
+                        <Plus className="w-4 h-4" /> CRIAR NOVA CONTA
+                      </button>
+                    </div>
+
+                    <div className="lg:col-span-2">
+                      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" /> Comentários Recentes
+                      </h3>
+                      <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden h-[300px] flex flex-col">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                          {socialComments.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-slate-600 italic text-sm">
+                              Nenhum comentário ainda...
+                            </div>
+                          ) : (
+                            socialComments.map((comment) => (
+                              <div key={comment.id} className="bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
+                                <div className="flex justify-between items-start mb-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-xs text-white">{comment.author}</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">{comment.platform}</span>
+                                    {comment.isHired && (
+                                      <span className="bg-cyan-500/20 text-cyan-400 text-[9px] px-1.5 py-0.5 rounded-full border border-cyan-500/30 font-bold uppercase tracking-wider">
+                                        Contratado
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {comment.sentiment === 'positive' && <ThumbsUp className="w-3 h-3 text-emerald-400" />}
+                                    {comment.sentiment === 'negative' && <ThumbsDown className="w-3 h-3 text-rose-400" />}
+                                    <span className="text-[10px] text-slate-500">{comment.date.toLocaleDateString()}</span>
+                                  </div>
+                                </div>
+                                <p className="text-sm text-slate-300 leading-relaxed">{comment.content}</p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {bands.length > 0 && (
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm md:col-span-3">
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-indigo-400" /> Bandas e Shows
+                </h2>
+                <p className="text-slate-400 text-sm mb-6">Organize shows e turnês para suas bandas ganharem dinheiro e fãs.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {bands.map(band => (
+                    <div key={band.id} className="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                      <div className="flex justify-between items-center mb-4">
+                        <div>
+                          <h3 className="font-bold text-white text-lg">{band.name}</h3>
+                          <p className="text-xs text-slate-500">{band.genre} • {band.members} integrantes</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {upgrades.find(u => u.id === 'shows_locais')?.level ? upgrades.find(u => u.id === 'shows_locais')!.level > 0 && (
+                          <button 
+                            onClick={() => organizeShow(band.id, 'local')}
+                            className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg transition-all"
+                          >
+                            Show Local ({formatMoney(30000)})
+                          </button>
+                        ) : (
+                          <button disabled className="flex-1 py-2 bg-slate-800 text-slate-500 text-sm font-bold rounded-lg cursor-not-allowed">
+                            Pesquise Shows Locais
+                          </button>
+                        )}
+                        
+                        {upgrades.find(u => u.id === 'turne_mundial')?.level ? upgrades.find(u => u.id === 'turne_mundial')!.level > 0 && (
+                          <button 
+                            onClick={() => organizeShow(band.id, 'mundial')}
+                            className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold rounded-lg transition-all"
+                          >
+                            Turnê Mundial ({formatMoney(150000)})
+                          </button>
+                        ) : (
+                          <button disabled className="flex-1 py-2 bg-slate-800 text-slate-500 text-sm font-bold rounded-lg cursor-not-allowed">
+                            Pesquise Turnês Mundiais
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              <button 
-                onClick={() => {
-                  const platforms = ['Twatter', 'FaceTome', 'InstaPic', 'TokTik'];
-                  const availablePlatforms = platforms.filter(p => !socialAccounts.find(sa => sa.platform === p));
+            <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-sm relative overflow-hidden md:col-span-3">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+              
+              <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <Calendar className="w-6 h-6 text-pink-400" /> Mega Convenção Anual
+                  </h3>
+                  <p className="text-slate-400 mb-6">
+                    Realize um evento anual massivo para seus fãs. Gera um hype absurdo para todos os seus próximos lançamentos e aumenta drasticamente sua base de fãs. Só pode ser realizado uma vez a cada 12 meses.
+                  </p>
                   
-                  if (availablePlatforms.length === 0) {
-                    setNotification({ message: 'Você já possui contas em todas as redes sociais disponíveis!', type: 'info' });
-                    setTimeout(() => setNotification(null), 3000);
-                    return;
-                  }
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <div className="text-sm text-slate-500 mb-1">Custo do Evento</div>
+                      <div className="text-xl font-bold text-red-400">-{formatMoney(500000)}</div>
+                    </div>
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <div className="text-sm text-slate-500 mb-1">Hype Multiplier</div>
+                      <div className="text-xl font-bold text-emerald-400">2.5x</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="w-full md:w-auto">
+                  <button
+                    onClick={() => {
+                      const now = Date.now();
+                      const oneYear = 12 * 30 * 24 * 60 * 60 * 1000; // Approx 1 year in game time
+                      
+                      if (lastConventionDate && now - lastConventionDate < oneYear) {
+                        setNotification({ message: 'Você já realizou uma convenção este ano! Aguarde.', type: 'error' });
+                        setTimeout(() => setNotification(null), 3000);
+                        return;
+                      }
 
-                  setPromptModal({
-                    isOpen: true,
-                    title: 'Criar Conta',
-                    message: 'Em qual rede social você deseja criar uma conta?',
-                    options: availablePlatforms,
-                    onConfirm: (platform) => {
-                      setSocialAccounts(s => [...s, { platform, followers: 0 }]);
-                      setNotification({ message: `Conta criada no ${platform} com sucesso!`, type: 'success' });
+                      if (money >= 500000) {
+                        setMoney(m => m - 500000);
+                        setFans(f => f + Math.floor(Math.random() * 50000) + 20000);
+                        setHypeMultiplier(2.5);
+                        setLastConventionDate(now);
+                        setNotification({ message: 'Mega Convenção realizada com sucesso! Hype no máximo!', type: 'success' });
+                      } else {
+                        setNotification({ message: 'Dinheiro insuficiente para realizar a convenção.', type: 'error' });
+                      }
                       setTimeout(() => setNotification(null), 3000);
-                    },
-                    onCancel: () => {}
-                  });
-                }}
-                className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
-              >
-                <Plus className="w-5 h-5" /> CRIAR CONTA EM REDE SOCIAL
-              </button>
+                    }}
+                    className="w-full md:w-64 py-5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-black rounded-xl flex flex-col items-center justify-center gap-1 transition-all shadow-lg shadow-pink-500/25 active:scale-95"
+                  >
+                    <span className="uppercase tracking-widest text-sm">Realizar Evento</span>
+                    <span className="text-xs text-pink-200 font-normal">Aumenta Hype Global</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1973,7 +3020,7 @@ export default function App() {
               <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center mb-6">
                 <p className="text-slate-400 mb-2">Fábricas Ativas</p>
                 <p className="text-3xl font-bold text-white">{factories}</p>
-                <p className="text-sm text-slate-500 mt-2">Aumenta as vendas de produtos físicos (Hardware)</p>
+                <p className="text-sm text-slate-500 mt-2">Aumenta as vendas de produtos físicos e permite produzir Merchandising</p>
               </div>
               <button 
                 onClick={() => {
@@ -1990,6 +3037,71 @@ export default function App() {
               >
                 <Plus className="w-5 h-5" /> CONSTRUIR FÁBRICA ({formatMoney(500000 * (factories + 1))})
               </button>
+            </div>
+
+            <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm md:col-span-2">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Globe className="w-5 h-5 text-fuchsia-400" /> Plataforma de Streaming
+              </h2>
+              
+              {!hasStreaming ? (
+                <div className="text-center">
+                  <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-6">
+                    <p className="text-slate-400 mb-2">Você ainda não possui sua própria plataforma de streaming.</p>
+                    <p className="text-sm text-slate-500 mt-2">Crie seu próprio serviço (estilo Netflix/Spotify) para gerar receita recorrente com todo o seu catálogo de lançamentos.</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (money >= 1000000) {
+                        setMoney(m => m - 1000000);
+                        setHasStreaming(true);
+                        setServers(1);
+                        setNotification({ message: 'Plataforma de Streaming lançada com sucesso!', type: 'success' });
+                        setTimeout(() => setNotification(null), 3000);
+                      } else {
+                        setNotification({ message: `Dinheiro insuficiente! Custa ${formatMoney(1000000)} para lançar a plataforma.`, type: 'error' });
+                        setTimeout(() => setNotification(null), 3000);
+                      }
+                    }}
+                    className="w-full py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-fuchsia-500/20 active:scale-95"
+                  >
+                    <Plus className="w-5 h-5" /> LANÇAR PLATAFORMA DE STREAMING ({formatMoney(1000000)})
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center">
+                    <p className="text-slate-400 mb-2">Assinantes Ativos</p>
+                    <p className="text-3xl font-bold text-fuchsia-400">{formatNumber(subscribers)}</p>
+                    <p className="text-sm text-slate-500 mt-2">Renda Mensal: <span className="text-emerald-400">+{formatMoney(subscribers * 15)}</span></p>
+                  </div>
+                  <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center">
+                    <p className="text-slate-400 mb-2">Catálogo</p>
+                    <p className="text-3xl font-bold text-white">{history.length}</p>
+                    <p className="text-sm text-slate-500 mt-2">Lançamentos disponíveis</p>
+                  </div>
+                  <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center">
+                    <p className="text-slate-400 mb-2">Servidores</p>
+                    <p className="text-3xl font-bold text-white">{servers}</p>
+                    <p className="text-sm text-slate-500 mt-2">Capacidade: {formatNumber(servers * 500000)} assinantes</p>
+                    <button 
+                      onClick={() => {
+                        const cost = 250000 * servers;
+                        if (money >= cost) {
+                          setMoney(m => m - cost);
+                          setServers(s => s + 1);
+                        } else {
+                          setNotification({ message: `Dinheiro insuficiente! Custa ${formatMoney(cost)} para adicionar um servidor.`, type: 'error' });
+                          setTimeout(() => setNotification(null), 3000);
+                        }
+                      }}
+                      className="w-full mt-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-lg transition-all"
+                    >
+                      + SERVIDOR ({formatMoney(250000 * servers)})
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-sm md:col-span-2">
@@ -2038,7 +3150,7 @@ export default function App() {
                             const income = Math.floor(Math.random() * 20000) + 10000;
                             setMoney(m => m - cost);
                             setCompanies(c => [...c, {
-                              id: Date.now(),
+                              id: Date.now() + Math.random(),
                               name: companyName,
                               type: typeInput,
                               value: cost,
@@ -2099,7 +3211,42 @@ export default function App() {
               <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-400" /> Mercado de Ações
               </h2>
+              
+              <div className="mb-6 p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl">
+                <h3 className="font-bold text-white mb-2">Sua Empresa</h3>
+                {!playerCompany.isPublic ? (
+                  <button 
+                    onClick={() => {
+                      if (history.length >= 3) {
+                        setPlayerCompany(p => ({ ...p, isPublic: true }));
+                        setMoney(m => m + 5000000); // IPO bonus
+                        setNotification({ message: 'IPO realizado com sucesso! +$5.000.000', type: 'success' });
+                        setTimeout(() => setNotification(null), 3000);
+                      } else {
+                        setNotification({ message: 'Você precisa lançar pelo menos 3 produtos para fazer o IPO.', type: 'error' });
+                        setTimeout(() => setNotification(null), 3000);
+                      }
+                    }}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors"
+                  >
+                    Fazer IPO (Abrir Capital)
+                  </button>
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-slate-400">Valor da Ação</p>
+                      <p className="text-xl font-bold text-indigo-400">{formatMoney(playerCompany.sharePrice)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-400">Status</p>
+                      <p className="text-sm font-bold text-emerald-400">Capital Aberto</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4">
+                <h3 className="font-bold text-slate-300 text-sm uppercase tracking-wider">Empresas Rivais</h3>
                 {stocks.map(stock => (
                   <div key={stock.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
                     <div>
@@ -2179,6 +3326,18 @@ export default function App() {
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{game.genre}</span>
                           <span className="w-1 h-1 bg-slate-700 rounded-full" />
                           <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">{game.platform}</span>
+                          {game.theme && (
+                            <>
+                              <span className="w-1 h-1 bg-slate-700 rounded-full" />
+                              <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">{game.theme}</span>
+                            </>
+                          )}
+                          {game.visualStyle && (
+                            <>
+                              <span className="w-1 h-1 bg-slate-700 rounded-full" />
+                              <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">{game.visualStyle}</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2202,6 +3361,88 @@ export default function App() {
                           </span>
                         </div>
                       </div>
+                      
+                      {game.score >= 7.0 && (
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          {game.hasMerch ? (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold py-2 px-3 rounded-xl text-center flex items-center justify-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" /> Merch Ativo
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                if (factories === 0) {
+                                  setNotification({ message: 'Você precisa de pelo menos 1 Fábrica (aba Infra) para produzir Merchandising!', type: 'error' });
+                                  setTimeout(() => setNotification(null), 4000);
+                                  return;
+                                }
+                                if (money < 50000) {
+                                  setNotification({ message: 'Dinheiro insuficiente para iniciar a produção de Merchandising ($50.000)!', type: 'error' });
+                                  setTimeout(() => setNotification(null), 4000);
+                                  return;
+                                }
+                                setMoney(m => m - 50000);
+                                setHistory(h => h.map(g => g.id === game.id ? { ...g, hasMerch: true } : g));
+                                setNotification({ message: `Merchandising de ${game.name} lançado! Gerando renda passiva nas fábricas.`, type: 'success' });
+                                setTimeout(() => setNotification(null), 4000);
+                              }}
+                              className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all shadow-lg shadow-purple-500/20 active:scale-95 flex items-center justify-center gap-1"
+                            >
+                              <ShoppingCart className="w-3 h-3" /> Lançar Merch
+                            </button>
+                          )}
+
+                          {game.hasEsports ? (
+                            <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold py-2 px-3 rounded-xl text-center flex items-center justify-center gap-1">
+                              <Trophy className="w-3 h-3" /> eSports Ativo
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                if (money < 1000000) {
+                                  setNotification({ message: 'Dinheiro insuficiente para iniciar uma Liga de eSports ($1.000.000)!', type: 'error' });
+                                  setTimeout(() => setNotification(null), 4000);
+                                  return;
+                                }
+                                setMoney(m => m - 1000000);
+                                setHistory(h => h.map(g => g.id === game.id ? { ...g, hasEsports: true } : g));
+                                setNotification({ message: `Liga de eSports de ${game.name} criada! Gerando renda passiva e fãs.`, type: 'success' });
+                                setTimeout(() => setNotification(null), 4000);
+                              }}
+                              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-1"
+                            >
+                              <Trophy className="w-3 h-3" /> Criar Liga eSports
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {game.isSubscription && (
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          {game.isActive ? (
+                            <>
+                              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold py-2 px-3 rounded-xl text-center flex flex-col items-center justify-center gap-1">
+                                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Serviço Ativo</span>
+                                <span className="text-[10px] text-emerald-500/80">{formatNumber(game.activeSubscribers || 0)} assinantes</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setHistory(h => h.map(g => g.id === game.id ? { ...g, isActive: false } : g));
+                                  setNotification({ message: `Serviço ${game.name} encerrado.`, type: 'success' });
+                                  setTimeout(() => setNotification(null), 4000);
+                                }}
+                                className="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white text-xs font-bold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1"
+                              >
+                                Encerrar Serviço
+                              </button>
+                            </>
+                          ) : (
+                            <div className="bg-slate-800/50 border border-slate-700 text-slate-500 text-xs font-bold py-2 px-3 rounded-xl text-center flex items-center justify-center gap-1">
+                              Serviço Encerrado
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 ))}
@@ -2327,9 +3568,21 @@ export default function App() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-slate-950 rounded-xl border border-slate-800">
+                    <span className="text-slate-400">Receita Mensal (Assinaturas SaaS)</span>
+                    <span className="text-xl font-bold text-emerald-400">
+                      +{formatMoney(history.filter(g => g.isSubscription && g.isActive).reduce((acc, g) => acc + (g.activeSubscribers || 0) * (g.monthlyFee || 0), 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-slate-950 rounded-xl border border-slate-800">
                     <span className="text-slate-400">Despesa Mensal (Empréstimos)</span>
                     <span className="text-xl font-bold text-red-400">
                       -{formatMoney(loans.reduce((acc, l) => acc + Math.ceil(l.remaining * 0.05), 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-slate-950 rounded-xl border border-slate-800">
+                    <span className="text-slate-400">Despesa Mensal (Manutenção SaaS)</span>
+                    <span className="text-xl font-bold text-red-400">
+                      -{formatMoney(history.filter(g => g.isSubscription && g.isActive).reduce((acc, g) => acc + (g.maintenanceCost || 0), 0))}
                     </span>
                   </div>
                 </div>
@@ -2456,25 +3709,7 @@ export default function App() {
                   <Clock className="w-5 h-5 text-amber-400" /> Histórico de Eventos
                 </h3>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                  {news.length === 0 ? (
-                    <p className="text-slate-500 text-sm italic text-center py-8">Nenhum evento registrado ainda.</p>
-                  ) : (
-                    news.map((item, idx) => (
-                      <div key={idx} className="flex gap-4 relative">
-                        <div className="flex flex-col items-center">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full mt-1.5"></div>
-                          {idx !== news.length - 1 && <div className="w-0.5 h-full bg-slate-800 my-1"></div>}
-                        </div>
-                        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex-1 mb-4">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="text-white font-bold">{item.title}</h4>
-                            <span className="text-xs text-slate-500 font-mono">{formatDate(item.date)}</span>
-                          </div>
-                          <p className="text-slate-400 text-sm">{item.content}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                  <p className="text-slate-500 text-sm italic text-center py-8">Nenhum evento registrado ainda.</p>
                 </div>
               </div>
             </div>
@@ -2606,13 +3841,33 @@ export default function App() {
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <PieChart className="w-5 h-5 text-indigo-400" /> Market Share Global
                 </h3>
-                <div className="p-6 bg-slate-950 rounded-xl border border-slate-800 text-center flex flex-col items-center justify-center h-[300px]">
-                  <div className="w-40 h-40 rounded-full border-[16px] border-slate-800 relative flex items-center justify-center mb-6">
-                    <div className="absolute inset-0 rounded-full border-[16px] border-indigo-500" style={{ clipPath: `polygon(50% 50%, 50% 0, ${50 + Math.min(50, fans / 100000)}% 0, ${50 + Math.min(50, fans / 100000)}% 100%, 50% 100%)` }}></div>
-                    <span className="text-2xl font-black text-white">{Math.min(100, (fans / 1000000)).toFixed(1)}%</span>
-                  </div>
-                  <h4 className="text-lg font-bold text-white mb-1">Presença de Mercado</h4>
-                  <p className="text-slate-400 text-sm">Baseado no número de fãs e lançamentos.</p>
+                <div className="p-6 bg-slate-950 rounded-xl border border-slate-800 flex flex-col gap-4 h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                  {[...rivals, { id: 0, name: companyName || 'Sua Empresa', marketShare: playerMarketShare, fans: fans, isPlayer: true }]
+                    .sort((a, b) => b.marketShare - a.marketShare)
+                    .map((company, index) => (
+                      <div key={company.id} className={`p-4 rounded-xl border flex items-center justify-between ${company.isPlayer ? 'bg-indigo-900/40 border-indigo-500/50' : 'bg-slate-900 border-slate-800'}`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${company.isPlayer ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h4 className={`font-bold ${company.isPlayer ? 'text-indigo-400' : 'text-white'}`}>
+                              {company.name} {company.isPlayer && '(Você)'}
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              {formatNumber(company.fans)} fãs
+                              {!company.isPlayer && (company as Rival).lastRelease && ` • Último: ${(company as Rival).lastRelease!.name} (${(company as Rival).lastRelease!.score.toFixed(1)})`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-black text-white">{company.marketShare.toFixed(1)}%</div>
+                          <div className="w-24 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                            <div className={`h-full rounded-full ${company.isPlayer ? 'bg-indigo-500' : 'bg-slate-500'}`} style={{ width: `${company.marketShare}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>
@@ -2637,7 +3892,7 @@ export default function App() {
                   <button 
                     onClick={() => {
                       const saveData = {
-                        money, fans, history, awardsWon, news, activeTab,
+                        money, fans, history, awardsWon, activeTab,
                         officeLevel, stores, researchLabs, factories, researchPoints, techLevel, upgrades,
                         bankOwned, loans, stocks, socialAccounts, companies, gameDate, staff,
                         playerStats, perks, ceoName, companyName, country, stateName, city
@@ -2656,8 +3911,16 @@ export default function App() {
                       if (saveData) {
                         try {
                           const data = JSON.parse(saveData);
-                          setMoney(data.money); setFans(data.fans); setHistory(data.history); setAwardsWon(data.awardsWon); setNews(data.news); setActiveTab(data.activeTab);
-                          setOfficeLevel(data.officeLevel); setStores(data.stores); setResearchLabs(data.researchLabs); setFactories(data.factories); setResearchPoints(data.researchPoints); setTechLevel(data.techLevel); 
+                          setMoney(data.money); setFans(data.fans); setHistory(data.history); setAwardsWon(data.awardsWon); setActiveTab(data.activeTab);
+                          setOfficeLevel(data.officeLevel); setStores(data.stores); setResearchLabs(data.researchLabs); setFactories(data.factories); 
+                          if (data.hasStreaming !== undefined) setHasStreaming(data.hasStreaming);
+                          if (data.subscribers !== undefined) setSubscribers(data.subscribers);
+                          if (data.servers !== undefined) setServers(data.servers);
+                          setResearchPoints(data.researchPoints); setTechLevel(data.techLevel); 
+                          if (data.hardware) setHardware(data.hardware);
+                          if (data.hiredVips) setHiredVips(data.hiredVips);
+                          if (data.hypeMultiplier !== undefined) setHypeMultiplier(data.hypeMultiplier);
+                          if (data.lastConventionDate !== undefined) setLastConventionDate(data.lastConventionDate);
                           if (data.upgrades) {
                             setUpgrades(DEFAULT_UPGRADES.map(def => {
                               const saved = data.upgrades.find((u: any) => u.id === def.id);
@@ -2681,9 +3944,20 @@ export default function App() {
                   </button>
                   <button 
                     onClick={() => {
-                      // Instead of confirm, just reload for now, or we could add a custom confirm modal.
-                      // Let's just reload.
-                      window.location.reload();
+                      setPromptModal({
+                        isOpen: true,
+                        title: 'Reiniciar Jogo',
+                        message: 'Tem certeza que deseja reiniciar o jogo? Todo o seu progresso será perdido.',
+                        options: ['Sim, reiniciar', 'Cancelar'],
+                        onConfirm: (opt) => {
+                          if (opt === 'Sim, reiniciar') {
+                            localStorage.removeItem('tycoon_save');
+                            localStorage.removeItem('mediaTechTycoonSave');
+                            window.location.reload();
+                          }
+                        },
+                        onCancel: () => {}
+                      });
                     }}
                     className="w-full py-4 bg-red-600/20 text-red-400 hover:bg-red-600/30 font-bold rounded-xl transition-all border border-red-500/30 flex items-center justify-center gap-2 mt-8"
                   >
@@ -2795,11 +4069,11 @@ export default function App() {
                     // Check if category has any available products
                     const availableTypes = getAvailableProductTypes(gameDate.getFullYear());
                     const categoryProducts = {
-                      'Software & Jogos': ['Jogo', 'Jogo Online', 'Aplicativo', 'Sistema Operacional', 'Motor Gráfico', 'Plataforma Digital', 'Rede Social', 'Site', 'Inteligência Artificial'],
-                      'Hardware & Dispositivos': ['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Óculos VR', 'Arcade'],
-                      'Mídia & Entretenimento': ['Filme', 'Série', 'Programa de TV', 'Serviço de Streaming', 'Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio'],
-                      'Físico & Impresso': ['Livro', 'Revista', 'Jornal', 'Jogo de Tabuleiro', 'Brinquedo'],
-                      'Construções': ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio']
+                      'Software & Jogos': ['Jogo', 'Jogo Online', 'Aplicativo', 'Sistema Operacional', 'Motor Gráfico', 'Plataforma Digital', 'Rede Social', 'Site', 'Inteligência Artificial', 'Realidade Virtual', 'Criptomoeda', 'Metaverso', 'Carro Autônomo (Software)', 'Plataforma de Streaming', 'Navegador Web', 'Aplicativo de Relacionamento', 'Assistente Virtual', 'Software de Edição'],
+                      'Hardware & Dispositivos': ['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Óculos VR', 'Arcade', 'Carro Elétrico', 'Robô Doméstico', 'Chip Neural', 'Foguete Espacial', 'Drone', 'Impressora 3D', 'Câmera Digital', 'Fone de Ouvido', 'Microfone', 'Televisão', 'Monitor'],
+                      'Mídia & Entretenimento': ['Filme', 'Série', 'Programa de TV', 'Emissora de TV', 'Serviço de Streaming', 'Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio', 'Emissora de Rádio', 'Documentário', 'Animação', 'Curta-metragem', 'Trilha Sonora', 'Efeitos Sonoros'],
+                      'Físico & Impresso': ['Livro', 'Revista', 'Jornal', 'Jogo de Tabuleiro', 'Brinquedo', 'História em Quadrinhos', 'Mangá', 'Livro Didático'],
+                      'Construções': ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio', 'Parque de Diversões', 'Aeroporto', 'Hospital', 'Escola', 'Universidade']
                     }[cat.id] || [];
                     
                     const hasProducts = categoryProducts.some(p => availableTypes.includes(p));
@@ -2828,11 +4102,11 @@ export default function App() {
                   {getAvailableProductTypes(gameDate.getFullYear())
                     .filter(type => {
                       const categoryProducts = {
-                        'Software & Jogos': ['Jogo', 'Jogo Online', 'Aplicativo', 'Sistema Operacional', 'Motor Gráfico', 'Plataforma Digital', 'Rede Social', 'Site', 'Inteligência Artificial'],
-                        'Hardware & Dispositivos': ['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Óculos VR', 'Arcade'],
-                        'Mídia & Entretenimento': ['Filme', 'Série', 'Programa de TV', 'Serviço de Streaming', 'Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio'],
-                        'Físico & Impresso': ['Livro', 'Revista', 'Jornal', 'Jogo de Tabuleiro', 'Brinquedo'],
-                        'Construções': ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio']
+                        'Software & Jogos': ['Jogo', 'Jogo Online', 'Aplicativo', 'Sistema Operacional', 'Motor Gráfico', 'Plataforma Digital', 'Rede Social', 'Site', 'Inteligência Artificial', 'Realidade Virtual', 'Criptomoeda', 'Metaverso', 'Carro Autônomo (Software)', 'Plataforma de Streaming', 'Navegador Web', 'Aplicativo de Relacionamento', 'Assistente Virtual', 'Software de Edição'],
+                        'Hardware & Dispositivos': ['Console', 'Console Portátil', 'Computador', 'Celular', 'Tablet', 'Smartwatch', 'Processador', 'Placa de Vídeo', 'Óculos VR', 'Arcade', 'Carro Elétrico', 'Robô Doméstico', 'Chip Neural', 'Foguete Espacial', 'Drone', 'Impressora 3D', 'Câmera Digital', 'Fone de Ouvido', 'Microfone', 'Televisão', 'Monitor'],
+                        'Mídia & Entretenimento': ['Filme', 'Série', 'Programa de TV', 'Emissora de TV', 'Serviço de Streaming', 'Álbum Musical', 'Dublagem/Audiobook', 'Podcast', 'Programa de Rádio', 'Emissora de Rádio', 'Documentário', 'Animação', 'Curta-metragem', 'Trilha Sonora', 'Efeitos Sonoros'],
+                        'Físico & Impresso': ['Livro', 'Revista', 'Jornal', 'Jogo de Tabuleiro', 'Brinquedo', 'História em Quadrinhos', 'Mangá', 'Livro Didático'],
+                        'Construções': ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio', 'Parque de Diversões', 'Aeroporto', 'Hospital', 'Escola', 'Universidade']
                       }[selectedCategory] || [];
                       return categoryProducts.includes(type);
                     })
@@ -2846,17 +4120,32 @@ export default function App() {
                          type === 'Celular' || type === 'Aplicativo' ? <Smartphone className="w-6 h-6 text-amber-400 group-hover:text-white" /> :
                          type === 'Plataforma Digital' || type === 'Site' ? <Store className="w-6 h-6 text-rose-400 group-hover:text-white" /> :
                          type === 'Rede Social' ? <Share2 className="w-6 h-6 text-cyan-400 group-hover:text-white" /> :
-                         type === 'Filme' || type === 'Série' || type === 'Programa de TV' || type === 'Serviço de Streaming' ? <MonitorPlay className="w-6 h-6 text-red-400 group-hover:text-white" /> :
+                         type === 'Filme' || type === 'Série' || type === 'Programa de TV' || type === 'Emissora de TV' || type === 'Serviço de Streaming' || type === 'Documentário' || type === 'Animação' || type === 'Curta-metragem' ? <Film className="w-6 h-6 text-red-400 group-hover:text-white" /> :
                          type === 'Sistema Operacional' || type === 'Placa de Vídeo' ? <Monitor className="w-6 h-6 text-sky-400 group-hover:text-white" /> :
                          type === 'Smartwatch' ? <Star className="w-6 h-6 text-lime-400 group-hover:text-white" /> :
-                         type === 'Álbum Musical' || type === 'Dublagem/Audiobook' || type === 'Podcast' || type === 'Programa de Rádio' ? <Mic className="w-6 h-6 text-pink-400 group-hover:text-white" /> :
-                         type === 'Livro' || type === 'Revista' ? <Book className="w-6 h-6 text-orange-400 group-hover:text-white" /> :
+                         type === 'Álbum Musical' || type === 'Dublagem/Audiobook' || type === 'Podcast' || type === 'Programa de Rádio' || type === 'Emissora de Rádio' || type === 'Trilha Sonora' || type === 'Efeitos Sonoros' ? <Music className="w-6 h-6 text-pink-400 group-hover:text-white" /> :
+                         type === 'Livro' || type === 'Revista' || type === 'História em Quadrinhos' || type === 'Mangá' || type === 'Livro Didático' ? <Book className="w-6 h-6 text-orange-400 group-hover:text-white" /> :
                          type === 'Jornal' ? <Newspaper className="w-6 h-6 text-gray-400 group-hover:text-white" /> :
                          type === 'Jogo de Tabuleiro' ? <Puzzle className="w-6 h-6 text-yellow-400 group-hover:text-white" /> :
                          type === 'Brinquedo' ? <Package className="w-6 h-6 text-teal-400 group-hover:text-white" /> :
                          type === 'Arcade' ? <Joystick className="w-6 h-6 text-fuchsia-400 group-hover:text-white" /> :
-                         type === 'Óculos VR' ? <Glasses className="w-6 h-6 text-cyan-500 group-hover:text-white" /> :
-                         ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio'].includes(type) ? <Building2 className="w-6 h-6 text-sky-400 group-hover:text-white" /> :
+                         type === 'Óculos VR' || type === 'Realidade Virtual' || type === 'Metaverso' ? <Glasses className="w-6 h-6 text-cyan-500 group-hover:text-white" /> :
+                         type === 'Inteligência Artificial' || type === 'Robô Doméstico' || type === 'Assistente Virtual' ? <Bot className="w-6 h-6 text-indigo-500 group-hover:text-white" /> :
+                         type === 'Criptomoeda' ? <Bitcoin className="w-6 h-6 text-yellow-500 group-hover:text-white" /> :
+                         type === 'Carro Autônomo (Software)' || type === 'Carro Elétrico' ? <Car className="w-6 h-6 text-red-500 group-hover:text-white" /> :
+                         type === 'Chip Neural' ? <Brain className="w-6 h-6 text-pink-500 group-hover:text-white" /> :
+                         type === 'Foguete Espacial' ? <Rocket className="w-6 h-6 text-orange-500 group-hover:text-white" /> :
+                         type === 'Drone' ? <Plane className="w-6 h-6 text-sky-500 group-hover:text-white" /> :
+                         type === 'Impressora 3D' ? <Printer className="w-6 h-6 text-emerald-500 group-hover:text-white" /> :
+                         type === 'Plataforma de Streaming' ? <MonitorPlay className="w-6 h-6 text-rose-500 group-hover:text-white" /> :
+                         type === 'Navegador Web' ? <Globe className="w-6 h-6 text-blue-500 group-hover:text-white" /> :
+                         type === 'Aplicativo de Relacionamento' ? <Heart className="w-6 h-6 text-pink-500 group-hover:text-white" /> :
+                         type === 'Software de Edição' ? <PenTool className="w-6 h-6 text-purple-500 group-hover:text-white" /> :
+                         type === 'Câmera Digital' ? <Camera className="w-6 h-6 text-gray-300 group-hover:text-white" /> :
+                         type === 'Fone de Ouvido' ? <Headphones className="w-6 h-6 text-indigo-300 group-hover:text-white" /> :
+                         type === 'Microfone' ? <Mic className="w-6 h-6 text-zinc-400 group-hover:text-white" /> :
+                         type === 'Televisão' || type === 'Monitor' ? <Tv className="w-6 h-6 text-sky-300 group-hover:text-white" /> :
+                         ['Casa', 'Prédio Residencial', 'Prédio Comercial', 'Shopping Center', 'Fábrica', 'Estádio', 'Parque de Diversões', 'Aeroporto', 'Hospital', 'Escola', 'Universidade'].includes(type) ? <Building2 className="w-6 h-6 text-sky-400 group-hover:text-white" /> :
                          <Star className="w-6 h-6 text-indigo-400 group-hover:text-white" />}
                       </div>
                       <div>
@@ -3005,6 +4294,17 @@ export default function App() {
                  productType === 'Brinquedo' ? 'Novo Brinquedo' :
                  productType === 'Arcade' ? 'Novo Arcade' :
                  productType === 'Óculos VR' ? 'Novo Óculos VR' :
+                 productType === 'Carro Elétrico' ? 'Novo Carro Elétrico' :
+                 productType === 'Robô Doméstico' ? 'Novo Robô Doméstico' :
+                 productType === 'Chip Neural' ? 'Novo Chip Neural' :
+                 productType === 'Foguete Espacial' ? 'Novo Foguete Espacial' :
+                 productType === 'Drone' ? 'Novo Drone' :
+                 productType === 'Impressora 3D' ? 'Nova Impressora 3D' :
+                 productType === 'Realidade Virtual' ? 'Nova Realidade Virtual' :
+                 productType === 'Criptomoeda' ? 'Nova Criptomoeda' :
+                 productType === 'Metaverso' ? 'Novo Metaverso' :
+                 productType === 'Carro Autônomo (Software)' ? 'Novo Carro Autônomo (Software)' :
+                 productType === 'Inteligência Artificial' ? 'Nova Inteligência Artificial' :
                  'Novo Projeto'}
               </h2>
               <button onClick={() => setIsSetupOpen(false)} className="text-slate-400 hover:text-white transition-colors">
@@ -3034,13 +4334,13 @@ export default function App() {
                 </div>
               </div>
 
-              {(productType === 'Jogo' || productType === 'Filme' || productType === 'Série' || productType === 'Programa de TV' || productType === 'Aplicativo' || productType === 'Sistema Operacional' || productType === 'Álbum Musical' || productType === 'Podcast' || productType === 'Programa de Rádio' || productType === 'Livro' || productType === 'Jornal' || productType === 'Revista' || productType === 'Jogo de Tabuleiro' || productType === 'Brinquedo' || productType === 'Arcade') && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {(productType === 'Jogo' || productType === 'Filme' || productType === 'Série' || productType === 'Programa de TV' || productType === 'Emissora de TV' || productType === 'Aplicativo' || productType === 'Sistema Operacional' || productType === 'Álbum Musical' || productType === 'Podcast' || productType === 'Programa de Rádio' || productType === 'Emissora de Rádio' || productType === 'Livro' || productType === 'Jornal' || productType === 'Revista' || productType === 'Jogo de Tabuleiro' || productType === 'Brinquedo' || productType === 'Arcade') && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       {productType === 'Aplicativo' || productType === 'Sistema Operacional' ? 'Categoria' : 
                        productType === 'Álbum Musical' ? 'Gênero Musical' : 
-                       productType === 'Podcast' || productType === 'Programa de Rádio' ? 'Tema' : 
+                       productType === 'Podcast' || productType === 'Programa de Rádio' || productType === 'Emissora de Rádio' ? 'Tema' : 
                        productType === 'Livro' || productType === 'Revista' || productType === 'Jornal' ? 'Assunto' :
                        'Gênero'}
                     </label>
@@ -3060,6 +4360,9 @@ export default function App() {
                           <option>Corrida</option>
                           <option>Luta</option>
                           <option>Puzzle</option>
+                          <option>Western</option>
+                          <option>Noir</option>
+                          <option>Ficção Científica Retrô</option>
                         </>
                       ) : productType === 'Álbum Musical' ? (
                         <>
@@ -3071,8 +4374,26 @@ export default function App() {
                           <option>Axé Music</option>
                           <option>Clássica</option>
                           <option>Jazz</option>
+                          <option>Bossa Nova</option>
+                          <option>MPB</option>
+                          <option>Jovem Guarda</option>
+                          <option>Rockabilly</option>
+                          <option>Blues</option>
                         </>
-                      ) : productType === 'Podcast' || productType === 'Programa de Rádio' ? (
+                      ) : productType === 'Mainframe' ? (
+                        <>
+                          <option>Cálculo Científico</option>
+                          <option>Gestão Empresarial</option>
+                          <option>Militar</option>
+                          <option>Acadêmico</option>
+                        </>
+                      ) : productType === 'Calculadora Eletrônica' ? (
+                        <>
+                          <option>Financeira</option>
+                          <option>Científica</option>
+                          <option>Básica</option>
+                        </>
+                      ) : productType === 'Podcast' || productType === 'Programa de Rádio' || productType === 'Emissora de Rádio' ? (
                         <>
                           <option>Entrevistas</option>
                           <option>True Crime</option>
@@ -3080,6 +4401,8 @@ export default function App() {
                           <option>Notícias</option>
                           <option>Educação</option>
                           <option>Tecnologia</option>
+                          <option>Música</option>
+                          <option>Esportes</option>
                         </>
                       ) : productType === 'Livro' || productType === 'Revista' || productType === 'Jornal' ? (
                         <>
@@ -3119,6 +4442,7 @@ export default function App() {
                         </>
                       ) : (
                         <>
+                          <option>Geral</option>
                           <option>Drama</option>
                           <option>Comédia</option>
                           <option>Ação</option>
@@ -3127,6 +4451,8 @@ export default function App() {
                           <option>Terror</option>
                           <option>Ficção Científica</option>
                           <option>Animação</option>
+                          <option>Notícias</option>
+                          <option>Esportes</option>
                         </>
                       )}
                     </select>
@@ -3149,6 +4475,16 @@ export default function App() {
                           <option>Arcade</option>
                           <option>Realidade Virtual</option>
                         </>
+                      ) : productType === 'Mainframe' ? (
+                        <>
+                          <option>Mainframe</option>
+                          <option>Cartões Perfurados</option>
+                        </>
+                      ) : productType === 'Calculadora Eletrônica' ? (
+                        <>
+                          <option>Desktop</option>
+                          <option>Portátil</option>
+                        </>
                       ) : productType === 'Álbum Musical' || productType === 'Podcast' || productType === 'Programa de Rádio' ? (
                         <>
                           <option>Streaming</option>
@@ -3165,6 +4501,14 @@ export default function App() {
                       ) : productType === 'Jogo de Tabuleiro' || productType === 'Brinquedo' || productType === 'Arcade' ? (
                         <>
                           <option>Físico</option>
+                        </>
+                      ) : productType === 'Emissora de TV' ? (
+                        <>
+                          <option>VHF (Analógico)</option>
+                          <option>UHF (Analógico)</option>
+                          <option>Cabo</option>
+                          <option>Satélite</option>
+                          <option>Digital (HDTV)</option>
                         </>
                       ) : (
                         <>
@@ -3213,6 +4557,14 @@ export default function App() {
                         <>
                           <option>Físico</option>
                         </>
+                      ) : productType === 'Emissora de TV' ? (
+                        <>
+                          <option>VHF (Analógico)</option>
+                          <option>UHF (Analógico)</option>
+                          <option>Cabo</option>
+                          <option>Satélite</option>
+                          <option>Digital (HDTV)</option>
+                        </>
                       ) : (
                         <>
                           <option>Cinema</option>
@@ -3220,6 +4572,108 @@ export default function App() {
                           <option>TV Aberta</option>
                           <option>TV a Cabo</option>
                           <option>DVD/Blu-ray</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      {['Emissora de Rádio', 'Emissora de TV', 'Podcast', 'Programa de Rádio'].includes(productType) ? 'Tema / Conteúdo' : 'Tema / Ambientação'}
+                    </label>
+                    <select 
+                      value={theme} 
+                      onChange={(e) => setTheme(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none"
+                    >
+                      {['Emissora de Rádio', 'Podcast', 'Programa de Rádio'].includes(productType) ? (
+                        <>
+                          <option>Geral / Variedades</option>
+                          <option>Informativo / Notícias</option>
+                          <option>Educativo / Cultura</option>
+                          <option>Musical (Hits)</option>
+                          <option>Debates / Político</option>
+                          <option>Investigativo / True Crime</option>
+                          <option>Lifestyle / Bem-estar</option>
+                          <option>Humor / Comédia</option>
+                        </>
+                      ) : productType === 'Álbum Musical' ? (
+                        <>
+                          <option>Amor / Romântico</option>
+                          <option>Festa / Balada</option>
+                          <option>Melancólico / Triste</option>
+                          <option>Protesto / Social</option>
+                          <option>Espiritual / Religioso</option>
+                          <option>Instrumental / Atmosférico</option>
+                          <option>Experimental</option>
+                        </>
+                      ) : productType === 'Emissora de TV' ? (
+                        <>
+                          <option>Entretenimento Geral</option>
+                          <option>Jornalismo 24h</option>
+                          <option>Esportes / Ao Vivo</option>
+                          <option>Infantil / Desenhos</option>
+                          <option>Variedades / Auditório</option>
+                          <option>Filmes e Séries</option>
+                          <option>Educativo / Cultura</option>
+                          <option>Religioso</option>
+                        </>
+                      ) : (
+                        <>
+                          <option>Contemporâneo</option>
+                          <option>Sci-Fi / Futurista</option>
+                          <option>Fantasia / Magia</option>
+                          <option>Cyberpunk</option>
+                          <option>Medieval</option>
+                          <option>Pós-Apocalíptico</option>
+                          <option>Terror / Sobrenatural</option>
+                          <option>Histórico</option>
+                          <option>Comédia / Sátira</option>
+                          <option>Romance</option>
+                          <option>Documentário / Real</option>
+                          <option>Esportes</option>
+                          <option>Notícias / Jornalismo</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      {['Emissora de Rádio', 'Podcast', 'Programa de Rádio', 'Álbum Musical'].includes(productType) ? 'Qualidade de Áudio / Formato' : 'Estilo Visual / Formato'}
+                    </label>
+                    <select 
+                      value={visualStyle} 
+                      onChange={(e) => setVisualStyle(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none"
+                    >
+                      {['Emissora de Rádio', 'Podcast', 'Programa de Rádio', 'Álbum Musical'].includes(productType) ? (
+                        <>
+                          <option>Apenas Áudio (Standard)</option>
+                          <option>Áudio de Alta Fidelidade (Hi-Fi)</option>
+                          <option>Áudio Espacial / Surround</option>
+                          <option>Mono (Retrô)</option>
+                          <option>Estéreo (Padrão)</option>
+                        </>
+                      ) : productType === 'Emissora de TV' ? (
+                        <>
+                          <option>Padrão (SD)</option>
+                          <option>Alta Definição (HD)</option>
+                          <option>Ultra HD (4K)</option>
+                          <option>Preto e Branco (Retrô)</option>
+                          <option>Cores Vibrantes</option>
+                        </>
+                      ) : (
+                        <>
+                          <option>3D Realista</option>
+                          <option>3D Low Poly / Estilizado</option>
+                          <option>2D Pixel Art</option>
+                          <option>2D Vetorial / Desenho</option>
+                          <option>Live Action (Atores Reais)</option>
+                          <option>Animação 3D</option>
+                          <option>Animação 2D</option>
+                          <option>Texto / Interface</option>
+                          <option>Impresso / Físico</option>
                         </>
                       )}
                     </select>
@@ -3257,6 +4711,150 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {productType === 'Álbum Musical' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Número de Músicas ({albumTracks})</label>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="30" 
+                      value={albumTracks} 
+                      onChange={(e) => setAlbumTracks(parseInt(e.target.value))}
+                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>1 (Single)</span>
+                      <span>30 (Duplo)</span>
+                    </div>
+                  </div>
+                  {upgrades.find(u => u.id === 'music_videos')?.level ? upgrades.find(u => u.id === 'music_videos')!.level > 0 && (
+                    <div className="flex items-center h-full pt-6">
+                      <label className="flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={hasMusicVideos} 
+                          onChange={(e) => setHasMusicVideos(e.target.checked)}
+                          className="w-5 h-5 rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-950"
+                        />
+                        <span className="ml-3 text-sm font-medium text-slate-300">Produzir Videoclipes</span>
+                      </label>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Público Alvo</label>
+                <select 
+                  value={targetAudience} 
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-all appearance-none"
+                >
+                  <option>Geral</option>
+                  <option>Infantil</option>
+                  <option>Jovem</option>
+                  <option>Adulto</option>
+                  <option>Nicho / Especializado</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Campanhas de Marketing</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {MARKETING_OPTIONS.filter(opt => gameDate.getFullYear() >= opt.year).map(opt => (
+                    <label key={opt.id} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${marketingCampaigns.includes(opt.id) ? 'bg-indigo-500/20 border-indigo-500' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}`}>
+                      <input 
+                        type="checkbox" 
+                        checked={marketingCampaigns.includes(opt.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setMarketingCampaigns([...marketingCampaigns, opt.id]);
+                          } else {
+                            setMarketingCampaigns(marketingCampaigns.filter(id => id !== opt.id));
+                          }
+                        }}
+                        className="w-5 h-5 rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-950"
+                      />
+                      <div className="ml-3 flex flex-col">
+                        <span className="text-sm font-medium text-white">{opt.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {opt.cost > 0 ? `-$${opt.cost.toLocaleString()}` : 'Grátis'} • Hype: {opt.hype}x
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {productType === 'Programa de TV' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Emissoras de Transmissão</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                    {[
+                      ...DEFAULT_TV_NETWORKS,
+                      ...history.filter(g => g.type === 'Emissora de TV').map(n => ({
+                        id: `player_${n.id}`,
+                        name: n.name,
+                        cost: 0,
+                        hype: 1.0 + (n.score / 10)
+                      }))
+                    ].map(opt => (
+                      <label key={opt.id} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${selectedTvNetworks.includes(opt.id) ? 'bg-indigo-500/20 border-indigo-500' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}`}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedTvNetworks.includes(opt.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTvNetworks([...selectedTvNetworks, opt.id]);
+                            } else {
+                              setSelectedTvNetworks(selectedTvNetworks.filter(id => id !== opt.id));
+                            }
+                          }}
+                          className="w-5 h-5 rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-950"
+                        />
+                        <div className="ml-3 flex flex-col">
+                          <span className="text-sm font-medium text-white">{opt.name}</span>
+                          <span className="text-xs text-slate-400">
+                            {opt.cost > 0 ? `-$${opt.cost.toLocaleString()}` : 'Sua Emissora (Grátis)'} • Hype: {opt.hype.toFixed(1)}x
+                          </span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Regiões de Lançamento</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {REGIONS.map(opt => (
+                    <label key={opt.id} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${selectedRegions.includes(opt.id) ? 'bg-indigo-500/20 border-indigo-500' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}`}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedRegions.includes(opt.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRegions([...selectedRegions, opt.id]);
+                          } else {
+                            if (selectedRegions.length > 1) {
+                              setSelectedRegions(selectedRegions.filter(id => id !== opt.id));
+                            }
+                          }
+                        }}
+                        className="w-5 h-5 rounded border-slate-700 text-indigo-500 focus:ring-indigo-500 bg-slate-950"
+                      />
+                      <div className="ml-3 flex flex-col">
+                        <span className="text-sm font-medium text-white">{opt.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {opt.costMultiplier > 0 ? `+${opt.costMultiplier * 100}% Custo` : 'Grátis'} • Vendas: {opt.salesMultiplier}x
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Tamanho / Escopo</label>
@@ -3328,6 +4926,41 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="w-5 h-5 text-indigo-400" />
+                  <h3 className="text-lg font-bold text-white">Recursos Adicionais</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {AVAILABLE_FEATURES.map(feature => {
+                    const isSelected = productFeatures.includes(feature.id);
+                    return (
+                      <button
+                        key={feature.id}
+                        onClick={() => toggleFeature(feature.id)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          isSelected 
+                            ? 'bg-indigo-600/20 border-indigo-500/50' 
+                            : 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <span className={`font-bold text-sm ${isSelected ? 'text-indigo-300' : 'text-slate-300'}`}>
+                            {feature.name}
+                          </span>
+                          {isSelected && <Check className="w-4 h-4 text-indigo-400" />}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-slate-400">{formatMoney(feature.cost)}</span>
+                          <span className="text-purple-400">{feature.rp} RP</span>
+                          <span className="text-emerald-400">+{feature.boost * 100}% Qualidade</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="p-6 border-t border-slate-800 bg-slate-800/50 flex flex-col sm:flex-row justify-between gap-4 items-center">
@@ -3336,8 +4969,16 @@ export default function App() {
                 <span className={`text-xl font-black ${money >= getProjectCost() ? 'text-emerald-400' : 'text-red-400'}`}>
                   {formatMoney(getProjectCost())}
                 </span>
+                {getProjectRPCost() > 0 && (
+                  <span className={`text-sm font-bold ${researchPoints >= getProjectRPCost() ? 'text-purple-400' : 'text-red-400'}`}>
+                    {getProjectRPCost()} RP
+                  </span>
+                )}
                 {money < getProjectCost() && (
                   <span className="text-[10px] text-red-500 font-bold uppercase mt-1">Saldo Insuficiente</span>
+                )}
+                {researchPoints < getProjectRPCost() && (
+                  <span className="text-[10px] text-red-500 font-bold uppercase mt-1">RP Insuficiente</span>
                 )}
               </div>
               <div className="flex gap-3 w-full sm:w-auto">
@@ -3346,9 +4987,9 @@ export default function App() {
                 </button>
                 <button 
                   onClick={startGame} 
-                  disabled={money < getProjectCost() || !gameName.trim()}
+                  disabled={money < getProjectCost() || researchPoints < getProjectRPCost() || !gameName.trim()}
                   className={`flex-1 sm:flex-none px-10 py-4 font-black rounded-2xl transition-all shadow-lg uppercase tracking-widest text-sm ${
-                    (money >= getProjectCost() && gameName.trim()) 
+                    (money >= getProjectCost() && researchPoints >= getProjectRPCost() && gameName.trim()) 
                     ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20 active:scale-95' 
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   }`}
@@ -3534,40 +5175,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL: NEWS */}
-      {isNewsOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Globe className="w-5 h-5 text-blue-400" /> Notícias do Mercado
-              </h2>
-              <button onClick={() => setIsNewsOpen(false)} className="text-slate-400 hover:text-white transition-colors">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1 space-y-4">
-              {news.length === 0 ? (
-                <div className="text-center py-12">
-                  <Globe className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                  <p className="text-slate-500">Nenhuma notícia no momento.</p>
-                </div>
-              ) : (
-                news.map(item => (
-                  <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-bold text-white">{item.title}</h3>
-                      <span className="text-xs text-slate-500 font-mono">{formatDate(item.date)}</span>
-                    </div>
-                    <p className="text-slate-400 text-sm">{item.content}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MODAL: SEARCH */}
       {isSearchOpen && (
         <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/80 backdrop-blur-sm p-4 pt-20">
@@ -3578,7 +5185,7 @@ export default function App() {
                 type="text" 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar produtos, notícias, empresas..."
+                placeholder="Buscar produtos, empresas..."
                 className="flex-1 bg-transparent border-none text-white text-lg focus:outline-none focus:ring-0 placeholder-slate-500"
                 autoFocus
               />
@@ -3603,27 +5210,16 @@ export default function App() {
                           <div key={game.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-between items-center">
                             <div>
                               <h4 className="font-bold text-white">{game.name}</h4>
-                              <span className="text-xs text-slate-500">{game.type} • {game.genre}</span>
+                              <span className="text-xs text-slate-500">
+                                {game.type} • {game.genre}
+                                {game.theme && ` • ${game.theme}`}
+                                {game.visualStyle && ` • ${game.visualStyle}`}
+                              </span>
                             </div>
                             <div className="text-right">
                               <div className="text-emerald-400 font-bold">{formatMoney(game.revenue)}</div>
                               <div className="text-xs text-slate-500">Nota: {game.score.toFixed(1)}</div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notícias */}
-                  {news.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Notícias</h3>
-                      <div className="space-y-2">
-                        {news.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
-                          <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-                            <h4 className="font-bold text-white text-sm">{item.title}</h4>
-                            <p className="text-xs text-slate-400 truncate mt-1">{item.content}</p>
                           </div>
                         ))}
                       </div>
@@ -3652,7 +5248,6 @@ export default function App() {
 
                   {/* Empty State */}
                   {history.filter(h => h.name.toLowerCase().includes(searchQuery.toLowerCase()) || h.type.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && 
-                   news.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 &&
                    companies.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.type.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                     <div className="text-center py-8">
                       <p className="text-slate-500">Nenhum resultado encontrado para "{searchQuery}".</p>
